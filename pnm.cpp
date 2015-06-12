@@ -19,32 +19,57 @@ PNM_FORMAT::PNM_FORMAT(const PNM_FORMAT &pnm)
 	maxint = pnm.maxint;
 }
 
+PNM_FORMAT::~PNM_FORMAT(void)
+{
+	desc = 0;
+	width = 0;
+	height = 0;
+	maxint = 0;
+}
+
 int
-PNM_FORMAT::Width(void)
+PNM_FORMAT::Desc(void) const
+{
+	return desc;
+}
+
+int
+PNM_FORMAT::Width(void) const
 {
 	return width;
 }
 
 int
-PNM_FORMAT::Height(void)
+PNM_FORMAT::Height(void) const
 {
 	return height;
 }
 
 int
-PNM_FORMAT::MaxInt(void)
+PNM_FORMAT::MaxInt(void) const
 {
 	return maxint;
 }
 
 int
-PNM_FORMAT::bitdepth(void)
+PNM_FORMAT::bitdepth(void) const
 {
-	return (int)round(std::log2(maxint + 1.0));
+	return (int)round(log2(maxint + 1.0));
 }
 
 bool
-PNM_FORMAT::isSameFormat(const PNM_FORMAT &pnm)
+PNM_FORMAT::isNULL(void) const
+{
+	if (PNM_DESCRIPTOR_MIN <= desc
+	    && desc <= PNM_DESCRIPTOR_MAX) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool
+PNM_FORMAT::isSameFormat(const PNM_FORMAT &pnm) const
 {
 	if ((desc % PNM_DESCRIPTOR_LENGTH) == (pnm.desc % PNM_DESCRIPTOR_LENGTH)) {
 		return true;
@@ -54,7 +79,7 @@ PNM_FORMAT::isSameFormat(const PNM_FORMAT &pnm)
 }
 
 bool
-PNM_FORMAT::isSameDescriptor(const PNM_FORMAT &pnm)
+PNM_FORMAT::isSameDescriptor(const PNM_FORMAT &pnm) const
 {
 	if (desc == pnm.desc) {
 		return true;
@@ -64,7 +89,7 @@ PNM_FORMAT::isSameDescriptor(const PNM_FORMAT &pnm)
 }
 
 bool
-PNM_FORMAT::isRGB(void)
+PNM_FORMAT::isRGB(void) const
 {
 	if (desc % PNM_DESCRIPTOR_PIXMAPS == 0) {
 		return true;
@@ -76,7 +101,7 @@ PNM_FORMAT::isRGB(void)
 
 
 
-// PNM Methods
+// PNM
 PNM::PNM(void)
 {
 	desc = 0;
@@ -86,7 +111,7 @@ PNM::PNM(void)
 	img = nullptr;
 }
 
-PNM::PNM(const PNM &pnm)
+PNM::PNM(const PNM &pnm) : PNM_FORMAT(pnm)
 {
 	const char *FunctionName = "PNM::PNM(const PNM &)";
 	std::string ErrorValueName;
@@ -122,7 +147,7 @@ PNM::PNM(const PNM &pnm)
 // Error
 ExitError:
 	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
-	this.free();
+	this->free();
 	return;
 }
 
@@ -132,8 +157,14 @@ PNM::~PNM(void)
 	img = nullptr;
 }
 
+pnm_img *
+PNM::Data(void) const
+{
+	return img;
+}
+
 pnm_img
-PNM::img(int x, int y)
+PNM::Image(int x, int y) const
 {
 	if (0 <= x && x < width && 0 <= y && y < height) {
 		return img[width * y + x];
@@ -199,33 +230,30 @@ ErrorMalloc:
 ErrorPointerNull:
 	fprintf(stderr, "*** %s() error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
 ExitError:
-	this.free();
+	this->free();
 	return PNM_FUNCTION_ERROR;
 }
 
 int
-PNM::copy(const PNM_DOUBLE &pnm_double, const double &coeff, const char *process, const PNM_OFFSET &add_offset)
+PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 {
 	const char *FunctionName = "PNM::copy(const PNM_DOUBLE &, const double &, const char *, const PNM_OFFSET &)";
 	std::string ErrorValueName;
-
+	pnm_img_double *imgd_data = nullptr;
 	double FRC = 0.5;
-	unsigned int M, N;
 
-	if (pnm_double.imgd == nullptr) {
-		ErrorValueName = "(pnm_double->imgd)";
+	if (pnm_double.isNULL() != false) {
+		ErrorValueName = "pnm_double.imgd";
 		goto ErrorPointerNull;
 	}
-	if (fabs(coeff) < 1.0 / pnm_double.maxint) {
+	if (fabs(coeff) < 1.0 / pnm_double.MaxInt()) {
 		fprintf(stderr, "*** %s() warning - The coefficient is ZERO ***\n", FunctionName);
 	}
 
-	desc = pnm_double.desc;
-	width = pnm_double.width;
-	height = pnm_double.height;
-	maxint = pnm_double.maxint;
-	M = pnm_double.height;
-	N = pnm_double.width;
+	desc = pnm_double.Desc();
+	width = pnm_double.Width();
+	height = pnm_double.Height();
+	maxint = pnm_double.MaxInt();
 	// Clear *img
 	delete[] img;
 	if (process != nullptr) {
@@ -237,49 +265,43 @@ PNM::copy(const PNM_DOUBLE &pnm_double, const double &coeff, const char *process
 			FRC = 1.0;
 		}
 	}
-	switch (pnm_double.desc) {
+	switch (desc) {
 		case PORTABLE_BITMAP_ASCII:
 		case PORTABLE_GRAYMAP_ASCII:
 		case PORTABLE_BITMAP_BINARY:
 		case PORTABLE_GRAYMAP_BINARY:
 			try {
-				img = new pnm_img[M * N];
+				img = new pnm_img[width * height];
 			}
 			catch (const std::bad_alloc &bad) {
 				ErrorValueName = "img";
 				goto ErrorMalloc;
 			}
-			for (int i = 0; i < M * N; i++) {
-				if (add_offset == nullptr) {
-					img[i] = (pnm_img)floor(coeff * pnm_double.imgd[i] + FRC);
-				} else {
-					img[i] = (pnm_img)floor(coeff * pnm_double.imgd[i] + add_offset.r + FRC);
-				}
+			imgd_data = pnm_double.Data();
+			for (int i = 0; i < width * height; i++) {
+				img[i] = (pnm_img)floor(coeff * imgd_data[i] + FRC);
 			}
+			imgd_data = nullptr;
 			break;
 		case PORTABLE_PIXMAP_ASCII:
 		case PORTABLE_PIXMAP_BINARY:
 			try {
-				img = new pnm_img[3 * M * N];
+				img = new pnm_img[3 * width * height];
 			}
 			catch (const std::bad_alloc &bad) {
 				ErrorValueName = "img";
 				goto ErrorMalloc;
 			}
-			for (int i = 0; i < M * N; i++) {
-				if (add_offset == nullptr) {
-					img[i] = (pnm_img)floor(coeff * pnm_double.imgd[i] + FRC);
-					img[M * N + i] = (pnm_img)floor(coeff * pnm_double.imgd[M * N + i] + FRC);
-					img[2 * M * N + i] = (pnm_img)floor(coeff * pnm_double.imgd[2 * M * N + i] + FRC);
-				} else {
-					img[i] = (pnm_img)floor(coeff * pnm_double.imgd[i] + add_offset.r + FRC);
-					img[M * N + i] = (pnm_img)floor(coeff * pnm_double.imgd[M * N + i] + add_offset.g + FRC);
-					img[2 * M * N + i] = (pnm_img)floor(coeff * pnm_double.imgd[2 * M * N + i] + add_offset.b + FRC);
-				}
+			imgd_data = pnm_double.Data();
+			for (int i = 0; i < width * height; i++) {
+				img[i] = (pnm_img)floor(coeff * imgd_data[i] + FRC);
+				img[width * height + i] = (pnm_img)floor(coeff * imgd_data[width * height + i] + FRC);
+				img[2 * width * height + i] = (pnm_img)floor(coeff * imgd_data[2 * width * height + i] + FRC);
 			}
+			imgd_data = nullptr;
 			break;
 		default: // ERROR
-			fprintf(stderr, "*** %s() error - Descriptor is incorrect (P%d) ***\n", FunctionName.c_str(), pnm_double.desc);
+			fprintf(stderr, "*** %s() error - Descriptor is incorrect (P%d) ***\n", FunctionName, desc);
 			goto ExitError;
 	}
 	return PNM_FUNCTION_SUCCESS;
@@ -290,15 +312,16 @@ ErrorMalloc:
 ErrorPointerNull:
 	fprintf(stderr, "*** %s() error - The pointer (*%s) is nullptr ***\n", FunctionName, ErrorValueName.c_str());
 ExitError:
-	this.free();
+	this->free();
 	return PNM_FUNCTION_ERROR;
 }
 
 int
 PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 {
-	const char *FunctionName = "PNM::copy(int, int, int *)";
+	const char *FunctionName = "PNM::copy(int, int, int, int, int *)";
 	std::string ErrorValueName;
+	std::string ErrorDesc;
 
 	if (Data == nullptr) {
 		ErrorValueName = "Data";
@@ -339,6 +362,68 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 			img[i] = Data[i];
 		}
 	}
+	return PNM_FUNCTION_SUCCESS;
+// Error
+ErrorMalloc:
+	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	goto ExitError;
+ErrorPointerNull:
+	fprintf(stderr, "*** %s() error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
+	goto ExitError;
+ErrorOthers:
+	fprintf(stderr, "*** %s() error - %s ***\n", FunctionName, ErrorDesc.c_str());
+ExitError:
+	this->free();
+	return PNM_FUNCTION_ERROR;
+}
+
+int
+PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, double coeff)
+{
+	const char *FunctionName = "PNM::copy(int, int, int, int, double*, double)";
+	std::string ErrorValueName;
+	std::string ErrorDesc;
+
+	if (Data == nullptr) {
+		ErrorValueName = "Data";
+		goto ErrorPointerNull;
+	}
+	if (Descriptor < PNM_DESCRIPTOR_MIN
+	    || Descriptor > PNM_DESCRIPTOR_MAX) {
+		ErrorDesc = "PNM descriptor is out of range [1, 6]";
+		goto ErrorOthers;
+	} else if (Width < 0 || Height < 0) {
+		ErrorDesc = "The size of image is invalid";
+		goto ErrorOthers;
+	}
+	desc = Descriptor;
+	width = Width;
+	height = Height;
+	maxint = MaxInt;
+	if (Descriptor % PNM_DESCRIPTOR_PIXMAPS == 0) {
+		try {
+			img = new pnm_img[3 * width * height];
+		}
+		catch (std::bad_alloc bad) {
+			ErrorValueName = "img";
+			goto ErrorMalloc;
+		}
+		for (int i = 0; i < 3 * width * height; i++) {
+			img[i] = coeff * Data[i];
+		}
+	} else {
+		try {
+			img = new pnm_img[width * height];
+		}
+		catch (std::bad_alloc bad) {
+			ErrorValueName = "img";
+			goto ErrorMalloc;
+		}
+		for (int i = 0; i < width * height; i++) {
+			img[i] = coeff * Data[i];
+		}
+	}
+	return PNM_FUNCTION_SUCCESS;
 // Error
 ErrorMalloc:
 	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
@@ -349,21 +434,21 @@ ErrorPointerNull:
 ErrorOthers:
 	fprintf(stderr, "*** %s() error - %s ***\n", FunctionName, ErrorValueName.c_str());
 ExitError:
-	this.free();
+	this->free();
+	return PNM_FUNCTION_ERROR;
 }
 
 int *
-PNM::get_int(void)
+PNM::get_int(void) const
 {
-	ERROR Error("PNM::get_int");
+	const char *FunctionName = "PNM::get_int";
 	int *Image = nullptr;
 
 	try {
 		Image = new int[width * height];
 	}
 	catch (const std::bad_alloc &bad) {
-		Error.Value("Image");
-		Error.Malloc();
+		fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, "Image");
 		return nullptr;
 	}
 	for (int n = 0; n < width * height; n++) {
@@ -373,17 +458,16 @@ PNM::get_int(void)
 }
 
 double *
-PNM::get_double(void)
+PNM::get_double(void) const
 {
-	ERROR Error("PNM::get_double");
+	const char *FunctionName = "PNM::get_double";
 	double *Image = nullptr;
 
 	try {
 		Image = new double[width * height];
 	}
 	catch (const std::bad_alloc &bad) {
-		Error.Value("Image");
-		Error.Malloc();
+		fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, "Image");
 		return nullptr;
 	}
 	for (int n = 0; n < width * height; n++) {
@@ -402,15 +486,14 @@ PNM::read(const char *filename)
 	std::string ErrorDescription;
 
 	uint8_t *img_uint8 = nullptr;
-	size_t size_t_max = (size_t)(~0u);
 	char FileDescriptor[PNM_DESCRIPTOR_LENGTH];
-	unsigned int width_tmp = 0u;
-	unsigned int m, n, byte;
+	int width_tmp = 0;
+	int m, n, byte;
 	int test;
 	FILE *fp = nullptr;
 
 	if (img != nullptr) {
-		this.free();
+		this->free();
 	}
 	if ((fp = fopen(filename, "rb")) == nullptr) {
 		ErrorFunctionName = "fopen";
@@ -468,7 +551,7 @@ PNM::read(const char *filename)
 					goto ErrorRead;
 				}
 			} else {
-				width_tmp = (unsigned int)ceil((double)width / BITS_OF_BYTE);
+				width_tmp = ceil((double)width / BITS_OF_BYTE);
 				try {
 					img_uint8 = new uint8_t[width_tmp * height];
 				}
@@ -477,7 +560,7 @@ PNM::read(const char *filename)
 					ErrorValueName = "img_uint8";
 					goto ErrorMalloc;
 				}
-				if ((unsigned int)fread(img_uint8, sizeof(uint8_t), (size_t)(width_tmp * height), fp) != width_tmp * height) {
+				if (fread(img_uint8, sizeof(uint8_t), (size_t)width_tmp * height, fp) != (size_t)width_tmp * height) {
 					ErrorFunctionName = "fread";
 					ErrorValueName = "img_uint8";
 					goto ErrorRead;
@@ -538,7 +621,7 @@ PNM::read(const char *filename)
 						ErrorValueName = "img_uint8";
 						goto ErrorMalloc;
 					}
-					if ((unsigned int)fread(img_uint8, sizeof(uint8_t), (size_t)(2 * width * height), fp) != 2 * width * height) {
+					if (fread(img_uint8, sizeof(uint8_t), (size_t)2 * width * height, fp) != (size_t)2 * width * height) {
 						ErrorFunctionName = "fread";
 						ErrorValueName = "img_uint8";
 						goto ErrorRead;
@@ -556,7 +639,7 @@ PNM::read(const char *filename)
 						ErrorValueName = "img_uint8";
 						goto ErrorMalloc;
 					}
-					if ((unsigned int)fread(img_uint8, sizeof(uint8_t), (size_t)(width * height), fp) != width * height) {
+					if (fread(img_uint8, sizeof(uint8_t), (size_t)width * height, fp) != (size_t)width * height) {
 						ErrorFunctionName = "fread";
 						ErrorValueName = "img_uint8";
 						goto ErrorRead;
@@ -616,7 +699,7 @@ PNM::read(const char *filename)
 						goto ErrorMalloc;
 					}
 					for (m = 0; m < height; m++) {
-						if ((unsigned int)fread(img_uint8, sizeof(uint8_t), (size_t)(2 * 3 * width), fp) != 2 * 3 * width) {
+						if (fread(img_uint8, sizeof(uint8_t), (size_t)2 * 3 * width, fp) != (size_t)2 * 3 * width) {
 							ErrorFunctionName = "fread";
 							ErrorValueName = "img_uint8";
 							goto ErrorRead;
@@ -630,7 +713,7 @@ PNM::read(const char *filename)
 				} else {
 					// 8-bit data
 					try {
-						img_uint8 = uint8_t[3 * width];
+						img_uint8 = new uint8_t[3 * width];
 					}
 					catch (const std::bad_alloc &bad) {
 						ErrorFunctionName = "new";
@@ -638,7 +721,7 @@ PNM::read(const char *filename)
 						goto ErrorMalloc;
 					}
 					for (m = 0; m < height; m++) {
-						if ((unsigned int)fread(img_uint8, sizeof(uint8_t), (size_t)(3 * width), fp) != 3 * width) {
+						if (fread(img_uint8, sizeof(uint8_t), (size_t)3 * width, fp) != (size_t)3 * width) {
 							ErrorFunctionName = "fread";
 							ErrorValueName = "img_uint8";
 							goto ErrorRead;
@@ -659,23 +742,17 @@ PNM::read(const char *filename)
 	img_uint8 = nullptr;
 	if (fclose(fp) == EOF) {
 		fprintf(stderr, "*** %s() error - Failed to close the file by fclose() ***\n", FunctionName);
-		this.free();
+		this->free();
 		return PNM_FUNCTION_ERROR;
 	}
 #ifndef PNM_NO_PRINT
-	printf("  width : %d\n  height %d\n  Bit Depth : %d\n", width, height, this.bitdepth());
+	printf("  width : %d\n  height %d\n  Bit Depth : %d\n", width, height, this->bitdepth());
 	printf("--- Successfully read the image ---\n\n");
 #endif
 	return PNM_FUNCTION_SUCCESS;
 // Error
 ErrorMalloc:
 	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) by %s() ***\n", FunctionName, ErrorValueName.c_str(), ErrorFunctionName.c_str());
-	goto ErrorReturn;
-ErrorPointernullptr:
-	fprintf(stderr, "*** %s() error - The pointer (*%s) is nullptr ***\n", FunctionName, ErrorValueName.c_str());
-	goto ErrorReturn;
-ErrorPointerNotInitialized:
-	fprintf(stderr, "*** %s() error - The pointer (*%s) may already be allocated or not initialized ***\n", FunctionName, ErrorValueName.c_str());
 	goto ErrorReturn;
 ErrorRead:
 	fprintf(stderr, "*** %s() error - Cannot read %s correctly by %s() ***\n", FunctionName, ErrorValueName.c_str(), ErrorFunctionName.c_str());
@@ -696,7 +773,7 @@ ErrorReturn:
 		fprintf(stderr, "*** %s() error - Failed to close the file by fclose() ***\n", FunctionName);
 	}
 	delete[] img_uint8;
-	this.free();
+	this->free();
 	return PNM_FUNCTION_ERROR;
 }
 
@@ -709,9 +786,9 @@ PNM::write(const char *filename)
 
 	std::string fixed_filename;
 	uint8_t *img_uint8 = nullptr;
-	unsigned int width_tmp = 0u;
-	unsigned int m, n;
-	unsigned int byte;
+	int width_tmp = 0;
+	int m, n;
+	int byte;
 	FILE *fp = nullptr;
 
 	if (img == nullptr) {
@@ -759,7 +836,7 @@ PNM::write(const char *filename)
 			break;
 		case PORTABLE_BITMAP_BINARY: // Bitmap
 			// 16-bit and 8-bit data
-			width_tmp = (unsigned int)ceil((double)width / BITS_OF_BYTE);
+			width_tmp = ceil((double)width / BITS_OF_BYTE);
 			try {
 				img_uint8 = new uint8_t[width_tmp * height];
 			}
@@ -780,7 +857,7 @@ PNM::write(const char *filename)
 				}
 			}
 			fprintf(fp, "P4\n%d %d\n", width, height);
-			if ((unsigned int)fwrite(img_uint8, sizeof(uint8_t), (size_t)(width_tmp * height), fp) != width_tmp * height) {
+			if (fwrite(img_uint8, sizeof(uint8_t), (size_t)width_tmp * height, fp) != (size_t)width_tmp * height) {
 				ErrorFunctionName = "fwrite";
 				ErrorValueName = "*img_uint8";
 				goto ErrorFunctionFailed;
@@ -802,7 +879,7 @@ PNM::write(const char *filename)
 					img_uint8[2 * m] = (uint8_t)(((unsigned int)img[m] >> 8) & 0xFF);
 					img_uint8[2 * m + 1] = (uint8_t)((unsigned int)img[m] & 0xFF);
 				}
-				if ((unsigned int)fwrite(img_uint8, sizeof(uint8_t), (size_t)(2 * width * height), fp) != 2 * width * height) {
+				if (fwrite(img_uint8, sizeof(uint8_t), (size_t)2 * width * height, fp) != (size_t)2 * width * height) {
 					ErrorFunctionName = "fwrite";
 					ErrorValueName = "img_uint8";
 					goto ErrorFunctionFailed;
@@ -820,7 +897,7 @@ PNM::write(const char *filename)
 				for (m = 0; m < width * height; m++) {
 					img_uint8[m] = (uint8_t)((unsigned int)img[m] & 0xFF);
 				}
-				if ((unsigned int)fwrite(img_uint8, sizeof(uint8_t), (size_t)(width * height), fp) != width * height) {
+				if (fwrite(img_uint8, sizeof(uint8_t), (size_t)width * height, fp) != (size_t)width * height) {
 					ErrorFunctionName = "fwrite";
 					ErrorValueName = "img_uint8";
 					goto ErrorFunctionFailed;
@@ -832,7 +909,7 @@ PNM::write(const char *filename)
 			if (maxint > 0xFF) {
 				// 16-bit data align in Big Endian order in 8-bit array
 				try {
-					img_uint8 = uint8_t[2 * 3 * width * height]; // 2 times the size for 16-bit
+					img_uint8 = new uint8_t[2 * 3 * width * height]; // 2 times the size for 16-bit
 				}
 				catch (const std::bad_alloc &bad) {
 					ErrorFunctionName = "new";
@@ -847,7 +924,7 @@ PNM::write(const char *filename)
 					img_uint8[6 * m + 5] = (uint8_t)(((unsigned int)img[2 * width * height + m] >> 8) & 0xFF); /* Higher 8-bit */
 					img_uint8[6 * m + 6] = (uint8_t)((unsigned int)img[2 * width * height + m] & 0xFF); /* Lower 8-bit */
 				}
-				if ((unsigned int)fwrite(img_uint8, sizeof(uint8_t), (size_t)(2 * 3 * width * height), fp) != 2 * 3 * width * height) {
+				if (fwrite(img_uint8, sizeof(uint8_t), (size_t)2 * 3 * width * height, fp) != (size_t)2 * 3 * width * height) {
 					ErrorFunctionName = "fwrite";
 					ErrorValueName = "img_uint8";
 					goto ErrorFunctionFailed;
@@ -867,7 +944,7 @@ PNM::write(const char *filename)
 					img_uint8[3 * m + 1] = (uint8_t)((unsigned int)img[width * height + m] & 0xFF);
 					img_uint8[3 * m + 2] = (uint8_t)((unsigned int)img[2 * width * height + m] & 0xFF);
 				}
-				if ((unsigned int)fwrite(img_uint8, sizeof(uint8_t), (size_t)(3 * width * height), fp) != 3 * width * height) {
+				if (fwrite(img_uint8, sizeof(uint8_t), (size_t)3 * width * height, fp) != (size_t)3 * width * height) {
 					ErrorFunctionName = "fwrite";
 					ErrorValueName = "img_uint8";
 					goto ErrorFunctionFailed;
@@ -912,11 +989,12 @@ PNM::Gray2RGB(const PNM &from)
 {
 	const char *FunctionName = "PNM::Gray2RGB";
 	std::string ErrorValueName;
+	pnm_img *img_from = nullptr;
 
 	if (img != nullptr) {
-		this.free();
+		this->free();
 	}
-	if (from.img == nullptr) {
+	if (from.isNULL() != false) {
 		ErrorValueName = "from.img";
 		goto ErrorPointerNull;
 	} else if (from.isRGB() != false) {
@@ -924,9 +1002,9 @@ PNM::Gray2RGB(const PNM &from)
 		goto ExitError;
 	}
 
-	width = from.width;
-	height = from.height;
-	maxint = from.maxint;
+	width = from.Width();
+	height = from.Height();
+	maxint = from.MaxInt();
 	try {
 		img = new pnm_img[3 * width * height];
 	}
@@ -934,16 +1012,18 @@ PNM::Gray2RGB(const PNM &from)
 		ErrorValueName = "img";
 		goto ErrorMalloc;
 	}
-	if (from.desc <= PNM_DESCRIPTOR_ASCII_MAX) {
+	if (from.Desc() <= PNM_DESCRIPTOR_ASCII_MAX) {
 		desc = PORTABLE_PIXMAP_ASCII;
 	} else {
 		desc = PORTABLE_PIXMAP_BINARY;
 	}
+	img_from = from.Data();
 	for (int i = 0; i < width * height; i++) {
-		img[i] = from.img[i];
-		img[width * height + i] = from.img[i];
-		img[2u * width * height + i] = from.img[i];
+		img[i] = img_from[i];
+		img[width * height + i] = img_from[i];
+		img[2u * width * height + i] = img_from[i];
 	}
+	img_from = nullptr;
 	return PNM_FUNCTION_SUCCESS;
 // Error
 ErrorMalloc:
@@ -952,10 +1032,62 @@ ErrorMalloc:
 ErrorPointerNull:
 	fprintf(stderr, "*** %s() error - The pointer (*%s) is nullptr ***\n", FunctionName, ErrorValueName.c_str());
 	goto ExitError;
-ErrorNotInitialized:
-	fprintf(stderr, "*** %s() error - The pointer (*%s) is NOT initialized ***\n", FunctionName, ErrorValueName.c_str());
 ExitError:
-	this.free();
+	this->free();
+	return PNM_FUNCTION_ERROR;
+}
+
+int
+PNM::RGB2Gray(const PNM &from)
+{
+	const char *FunctionName = "PNM::RGB2Gray";
+	std::string ErrorValueName;
+	pnm_img *img_from = nullptr;
+
+	if (img != nullptr) {
+		this->free();
+	}
+	if (from.isNULL() != false) {
+		ErrorValueName = "from.img";
+		goto ErrorPointerNull;
+	} else if (from.isRGB() == false) {
+		fprintf(stderr, "*** %s() error - PNM Descriptor of (&from) is incorrect ***\n", FunctionName);
+		goto ExitError;
+	}
+
+	width = from.Width();
+	height = from.Height();
+	maxint = from.MaxInt();
+	try {
+		img = new pnm_img[3 * width * height];
+	}
+	catch (const std::bad_alloc &bad) {
+		ErrorValueName = "img";
+		goto ErrorMalloc;
+	}
+	if (from.Desc() <= PNM_DESCRIPTOR_ASCII_MAX) {
+		desc = PORTABLE_GRAYMAP_ASCII;
+	} else {
+		desc = PORTABLE_GRAYMAP_BINARY;
+	}
+	img_from = from.Data();
+	for (int i = 0; i < width * height; i++) {
+		img[i] =
+		    PNM_YUV_Y_RED * img_from[i]
+		    + PNM_YUV_Y_GREEN * img_from[width * height + i]
+		    + PNM_YUV_Y_BLUE * img_from[2 * width * height + i];
+	}
+	img_from = nullptr;
+	return PNM_FUNCTION_SUCCESS;
+// Error
+ErrorMalloc:
+	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	goto ExitError;
+ErrorPointerNull:
+	fprintf(stderr, "*** %s() error - The pointer (*%s) is nullptr ***\n", FunctionName, ErrorValueName.c_str());
+	goto ExitError;
+ExitError:
+	this->free();
 	return PNM_FUNCTION_ERROR;
 }
 

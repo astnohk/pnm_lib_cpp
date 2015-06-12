@@ -1,7 +1,15 @@
+// For compiler before C++11
+//#define nullptr NULL
+// /For compiler before C++11
+
+// C++
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <string>
+// C
+#include <stdint.h>
 
 
 #define BITS_OF_BYTE 8
@@ -48,11 +56,12 @@
 #define PNM_RGB_BLUE_Cr 0.0
 
 // for pnm_resize()
-#define NUM_RESIZE_METHOD 2
+#define PNM_Resize_ZeroOrderHold 0
+#define PNM_Resize_Bicubic 1
 
 // for fcommentf()
-#define NUM_READ_STRING 512
-#define STRING_NUM_READ_STRING "%512s"
+#define NUM_READ_STRING 256
+#define STRING_NUM_READ_STRING "%256s"
 
 
 
@@ -70,16 +79,23 @@ class PNM_FORMAT
 	public:
 		PNM_FORMAT(void);
 		PNM_FORMAT(const PNM_FORMAT &pnm);
-		int Width();
-		int Height();
-		int MaxInt();
-		int bitdepth(void);
-		bool isSameFormat(const PNM_FORMAT &pnm);
-		bool isSameDescriptor(const PNM_FORMAT &pnm);
-		bool isRGB(void);
+		~PNM_FORMAT(void);
+		// Access
+		int Desc() const;
+		int Width() const;
+		int Height() const;
+		int MaxInt() const;
+		// Library
+		int bitdepth(void) const;
+		bool isNULL(void) const;
+		bool isSameFormat(const PNM_FORMAT &pnm) const;
+		bool isSameDescriptor(const PNM_FORMAT &pnm) const;
+		bool isRGB(void) const;
 };
 
-class PNM : PNM_FORMAT
+class PNM_DOUBLE;
+
+class PNM : public PNM_FORMAT
 {
 	private:
 		pnm_img *img;
@@ -87,14 +103,22 @@ class PNM : PNM_FORMAT
 		PNM(void);
 		PNM(const PNM &pnm);
 		~PNM(void);
-		pnm_img img(int x, int y);
+		pnm_img* Data(void) const;
+		pnm_img Image(int x, int y) const;
 		void free(void);
-		void copy(const PNM &pnm);
+		int copy(const PNM &pnm);
+		int copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process);
+		int copy(int Descriptor, int Width, int Height, int MaxInt, int *Data);
+		int copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, double coeff);
+		int* get_int(void) const;
+		double* get_double(void) const;
 		int read(const char *filename);
 		int write(const char *filename);
-}
+		int RGB2Gray(const PNM &from);
+		int Gray2RGB(const PNM &from);
+};
 
-class PNM_DOUBLE : PNM_FORMAT
+class PNM_DOUBLE : public PNM_FORMAT
 {
 	private:
 		pnm_img_double *imgd;
@@ -102,74 +126,28 @@ class PNM_DOUBLE : PNM_FORMAT
 		PNM_DOUBLE(void);
 		PNM_DOUBLE(const PNM_DOUBLE &pnmd);
 		~PNM_DOUBLE(void);
-		pnm_img_double imgd(int x, int y);
+		// Library
+		pnm_img_double* Data(void) const;
+		pnm_img_double Image(int x, int y) const;
 		void free(void);
-		void copy(const PNM_DOUBLE &pnmd);
+		int copy(const PNM_DOUBLE &pnmd);
+		int copy(const PNM &pnm_int, double coeff);
+		int copy(int Descriptor, int Width, int Height, int MaxInt, double *Data);
+		double* get_double(void) const;
+		int RGB2Gray(const PNM_DOUBLE &from);
+		int Gray2RGB(const PNM_DOUBLE &from);
+		int RGB2YCbCr(const PNM_DOUBLE &from);
+		int YCbCr2RGB(const PNM_DOUBLE &from);
 };
 
-struct PNM_OFFSET
-{
-	double r;
-	double g;
-	double b;
-	PNM_OFFSET(void);
-};
 
 
-
-// Read and Write
-extern int fcommentf(FILE *, unsigned int *);
-extern int pnmread(PNM *, char *);
-extern char* pnm_FixExtension(char *filename, int desc);
-extern int pnmwrite(PNM *, char *);
-
-// Memory Allocation
-extern int pnmnew(PNM *, int, unsigned int, unsigned int, unsigned int);
-extern int pnmdouble_new(PNM_DOUBLE *, int, unsigned int, unsigned int, unsigned int);
-extern PNM* pnmnew_NULL(void);
-extern PNM_DOUBLE* pnmdouble_new_NULL(void);
-
-// Memory Free
-extern void pnmfree(PNM *);
-extern void pnmdouble_free(PNM_DOUBLE *);
-extern void pnmdestroy(PNM *);
-extern void pnmdouble_destroy(PNM_DOUBLE *);
-
-// Copy
-extern int pnmcp(PNM *pnm_to, PNM *pnm_from);
-extern int pnmdouble_cp(PNM_DOUBLE *pnm_to, PNM_DOUBLE *pnm_from);
-
-// Convert integer, double
-extern int pnm_offset(PNM_OFFSET *offset, double r, double g, double b);
-extern int pnm_double2int(PNM *, PNM_DOUBLE *, double, const char *, PNM_OFFSET *);
-extern int pnm_int2double(PNM_DOUBLE *, PNM *, double, PNM_OFFSET *);
-
-// Read descriptions
-extern int pnm_bitdepth(PNM *);
-extern int pnmdouble_bitdepth(PNM_DOUBLE *);
-extern int pnm_isNULL(PNM *);
-extern int pnmdouble_isNULL(PNM_DOUBLE *pnm);
-extern int pnm_isSameFormat(PNM *pnm1, PNM *pnm2);
-extern int pnmdouble_isSameFormat(PNM_DOUBLE *pnm1, PNM_DOUBLE *pnm2);
-extern int pnm_isSameDescriptor(PNM *pnm1, PNM *pnm2);
-extern int pnmdouble_isSameDescriptor(PNM_DOUBLE *pnm1, PNM_DOUBLE *pnm2);
-extern int pnm_isRGB(PNM *);
-extern int pnmdouble_isRGB(PNM_DOUBLE *);
-
-// Convert Color Space
-extern int pnm_RGB2Gray(PNM_DOUBLE *out, PNM_DOUBLE *in);
-extern int pnm_Gray2RGB(PNM *out, PNM *in);
-extern int pnmdouble_Gray2RGB(PNM_DOUBLE *out, PNM_DOUBLE *in);
-extern int pnm_RGB2YCbCr(PNM_DOUBLE *out, PNM_DOUBLE *in);
-extern int pnm_YCbCr2RGB(PNM_DOUBLE *out, PNM_DOUBLE *in);
+// Library for Read and Write
+extern bool fcommentf(FILE *, int *);
+extern std::string pnm_FixExtension(const char *filename, int desc);
 
 // Resize
-extern int pnm_resize(PNM_DOUBLE *pnm_out, PNM_DOUBLE *pnm_in, unsigned int width_o, unsigned int height_o, const char *Method);
-extern int pnm_Bicubic(PNM_DOUBLE *pnm_out, PNM_DOUBLE *pnm_in, double alpha, unsigned int width_o, unsigned int height_o);
+extern int pnm_resize(PNM_DOUBLE *pnm_out, const PNM_DOUBLE &pnm_in, int width_o, int height_o, int Method);
+extern int pnm_Bicubic(PNM_DOUBLE *pnm_out, const PNM_DOUBLE &pnm_in, double alpha, int width_o, int height_o);
 extern double pnm_Cubic(double x, double a);
-
-// Extract and Convert PNM to Array
-extern int* pnm2int(PNM *pnm);
-extern double* pnm2double(PNM *pnm);
-extern double* pnmdouble2double(PNM_DOUBLE *pnmd);
 
