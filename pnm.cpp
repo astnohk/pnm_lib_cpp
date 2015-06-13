@@ -62,9 +62,9 @@ PNM_FORMAT::isNULL(void) const
 {
 	if (PNM_DESCRIPTOR_MIN <= desc
 	    && desc <= PNM_DESCRIPTOR_MAX) {
-		return true;
-	} else {
 		return false;
+	} else {
+		return true;
 	}
 }
 
@@ -116,10 +116,6 @@ PNM::PNM(const PNM &pnm) : PNM_FORMAT(pnm)
 	const char *FunctionName = "PNM::PNM(const PNM &)";
 	std::string ErrorValueName;
 
-	desc = pnm.desc;
-	width = pnm.width;
-	height = pnm.height;
-	maxint = pnm.maxint;
 	if (desc % 3 == 0) {
 		try {
 			img = new pnm_img[3 * width * height];
@@ -254,6 +250,7 @@ PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 	width = pnm_double.Width();
 	height = pnm_double.Height();
 	maxint = pnm_double.MaxInt();
+	imgd_data = pnm_double.Data();
 	// Clear *img
 	delete[] img;
 	if (process != nullptr) {
@@ -277,11 +274,9 @@ PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 				ErrorValueName = "img";
 				goto ErrorMalloc;
 			}
-			imgd_data = pnm_double.Data();
 			for (int i = 0; i < width * height; i++) {
 				img[i] = (pnm_img)floor(coeff * imgd_data[i] + FRC);
 			}
-			imgd_data = nullptr;
 			break;
 		case PORTABLE_PIXMAP_ASCII:
 		case PORTABLE_PIXMAP_BINARY:
@@ -292,13 +287,11 @@ PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 				ErrorValueName = "img";
 				goto ErrorMalloc;
 			}
-			imgd_data = pnm_double.Data();
 			for (int i = 0; i < width * height; i++) {
 				img[i] = (pnm_img)floor(coeff * imgd_data[i] + FRC);
 				img[width * height + i] = (pnm_img)floor(coeff * imgd_data[width * height + i] + FRC);
 				img[2 * width * height + i] = (pnm_img)floor(coeff * imgd_data[2 * width * height + i] + FRC);
 			}
-			imgd_data = nullptr;
 			break;
 		default: // ERROR
 			fprintf(stderr, "*** %s() error - Descriptor is incorrect (P%d) ***\n", FunctionName, desc);
@@ -343,7 +336,7 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 		try {
 			img = new pnm_img[3 * width * height];
 		}
-		catch (std::bad_alloc bad) {
+		catch (const std::bad_alloc &bad) {
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
@@ -354,7 +347,7 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 		try {
 			img = new pnm_img[width * height];
 		}
-		catch (std::bad_alloc bad) {
+		catch (const std::bad_alloc &bad) {
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
@@ -404,7 +397,7 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, doubl
 		try {
 			img = new pnm_img[3 * width * height];
 		}
-		catch (std::bad_alloc bad) {
+		catch (const std::bad_alloc &bad) {
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
@@ -415,7 +408,7 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, doubl
 		try {
 			img = new pnm_img[width * height];
 		}
-		catch (std::bad_alloc bad) {
+		catch (const std::bad_alloc &bad) {
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}

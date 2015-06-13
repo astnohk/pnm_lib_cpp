@@ -154,7 +154,7 @@ pnm_resize(PNM_DOUBLE *pnm_out, const PNM_DOUBLE &pnm_in, int width_o, int heigh
 					Image = new double[width_o * height_o];
 				}
 			}
-			catch (std::bad_alloc bad) {
+			catch (const std::bad_alloc &bad) {
 				ErrorValueName = "Image";
 				goto ErrorMalloc;
 			}

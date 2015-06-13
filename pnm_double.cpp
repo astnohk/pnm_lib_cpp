@@ -16,7 +16,6 @@ PNM_DOUBLE::PNM_DOUBLE(const PNM_DOUBLE &pnmd) : PNM_FORMAT(pnmd)
 {
 	const char *FunctionName = "PNM_DOUBLE::PNM_DOUBLE(const PNM_DOUBLE &)";
 	std::string ErrorValueName;
-	pnm_img_double *imgd_data = nullptr;
 
 	if (pnmd.isNULL() != false) {
 		ErrorValueName = "pnmd.imgd";
@@ -30,11 +29,9 @@ PNM_DOUBLE::PNM_DOUBLE(const PNM_DOUBLE &pnmd) : PNM_FORMAT(pnmd)
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		imgd_data = pnmd.Data();
 		for (int i = 0; i < 3 * width * height; i++) {
-			imgd[i] = imgd_data[i];
+			imgd[i] = pnmd.imgd[i];
 		}
-		imgd_data = nullptr;
 	} else {
 		try {
 			imgd = new pnm_img_double[width * height];
@@ -43,11 +40,9 @@ PNM_DOUBLE::PNM_DOUBLE(const PNM_DOUBLE &pnmd) : PNM_FORMAT(pnmd)
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		imgd_data = pnmd.Data();
 		for (int i = 0; i < width * height; i++) {
-			imgd[i] = imgd_data[i];
+			imgd[i] = pnmd.imgd[i];
 		}
-		imgd_data = nullptr;
 	}
 	return;
 // Error
@@ -99,16 +94,15 @@ PNM_DOUBLE::copy(const PNM_DOUBLE &pnmd)
 {
 	const char *FunctionName = "PNM_DOUBLE::copy(const PNM_DOUBLE &)";
 	std::string ErrorValueName;
-	pnm_img_double *imgd_data = nullptr;
 
 	if (pnmd.isNULL() != false) {
 		ErrorValueName = "pnmd.imgd";
 		goto ErrorPointerNull;
 	}
-	desc = pnmd.Desc();
-	width = pnmd.Width();
-	height = pnmd.Height();
-	maxint = pnmd.MaxInt();
+	desc = pnmd.desc;
+	width = pnmd.width;
+	height = pnmd.height;
+	maxint = pnmd.maxint;
 	delete[] imgd;
 	if (desc % 3 == 0) {
 		try {
@@ -118,11 +112,9 @@ PNM_DOUBLE::copy(const PNM_DOUBLE &pnmd)
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		imgd_data = pnmd.Data();
 		for (int i = 0; i < 3 * width * height; i++) {
-			imgd[i] = imgd_data[i];
+			imgd[i] = pnmd.imgd[i];
 		}
-		imgd_data = nullptr;
 	} else {
 		try {
 			imgd = new pnm_img_double[width * height];
@@ -131,11 +123,9 @@ PNM_DOUBLE::copy(const PNM_DOUBLE &pnmd)
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		imgd_data = pnmd.Data();
 		for (int i = 0; i < width * height; i++) {
-			imgd[i] = imgd_data[i];
+			imgd[i] = pnmd.imgd[i];
 		}
-		imgd_data = nullptr;
 	}
 	return PNM_FUNCTION_SUCCESS;
 ErrorMalloc:
@@ -168,6 +158,7 @@ PNM_DOUBLE::copy(const PNM &pnm_int, double coeff)
 	width = pnm_int.Width();
 	height = pnm_int.Height();
 	maxint = pnm_int.MaxInt();
+	img_data = pnm_int.Data();
 	// Clear *imgd
 	delete[] imgd;
 	switch (desc) {
@@ -182,11 +173,9 @@ PNM_DOUBLE::copy(const PNM &pnm_int, double coeff)
 				ErrorValueName = "imgd";
 				goto ErrorMalloc;
 			}
-			img_data = pnm_int.Data();
 			for (i = 0; i < width * height; i++) {
 				imgd[i] = coeff * (pnm_img_double)img_data[i];
 			}
-			img_data = nullptr;
 			break;
 		case PORTABLE_PIXMAP_ASCII:
 		case PORTABLE_PIXMAP_BINARY:
@@ -197,13 +186,11 @@ PNM_DOUBLE::copy(const PNM &pnm_int, double coeff)
 				ErrorValueName = "imgd";
 				goto ErrorMalloc;
 			}
-			img_data = pnm_int.Data();
 			for (i = 0; i < width * height; i++) {
 				imgd[i] = coeff * (pnm_img_double)img_data[i];
 				imgd[width * height + i] = coeff * (pnm_img_double)img_data[width * height + i];
 				imgd[2 * width * height + i] = coeff * (pnm_img_double)img_data[2 * width * height + i];
 			}
-			img_data = nullptr;
 			break;
 		default: // ERROR
 			fprintf(stderr, "*** %s() error - Descriptor is incorrect (P%d) ***\n", FunctionName, desc);
@@ -248,7 +235,7 @@ PNM_DOUBLE::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data
 		try {
 			imgd = new pnm_img_double[3 * width * height];
 		}
-		catch (std::bad_alloc bad) {
+		catch (const std::bad_alloc &bad) {
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
@@ -259,7 +246,7 @@ PNM_DOUBLE::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data
 		try {
 			imgd = new pnm_img_double[width * height];
 		}
-		catch (std::bad_alloc bad) {
+		catch (const std::bad_alloc &bad) {
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
