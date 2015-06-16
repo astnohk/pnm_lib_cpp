@@ -142,7 +142,7 @@ PNM::PNM(const PNM &pnm) : PNM_FORMAT(pnm)
 	return;
 // Error
 ExitError:
-	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
 	this->free();
 	return;
 }
@@ -223,10 +223,10 @@ PNM::copy(const PNM &pnm)
 	return PNM_FUNCTION_SUCCESS;
 // Error
 ErrorMalloc:
-	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
 	goto ExitError;
 ErrorPointerNull:
-	fprintf(stderr, "*** %s() error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
 ExitError:
 	this->free();
 	return PNM_FUNCTION_ERROR;
@@ -296,16 +296,16 @@ PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 			}
 			break;
 		default: // ERROR
-			fprintf(stderr, "*** %s() error - Descriptor is incorrect (P%d) ***\n", FunctionName, desc);
+			fprintf(stderr, "*** %s error - Descriptor is incorrect (P%d) ***\n", FunctionName, desc);
 			goto ExitError;
 	}
 	return PNM_FUNCTION_SUCCESS;
 // Error
 ErrorMalloc:
-	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
 	goto ExitError;
 ErrorPointerNull:
-	fprintf(stderr, "*** %s() error - The pointer (*%s) is nullptr ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - The pointer (*%s) is nullptr ***\n", FunctionName, ErrorValueName.c_str());
 ExitError:
 	this->free();
 	return PNM_FUNCTION_ERROR;
@@ -363,13 +363,13 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 	return PNM_FUNCTION_SUCCESS;
 // Error
 ErrorMalloc:
-	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
 	goto ExitError;
 ErrorPointerNull:
-	fprintf(stderr, "*** %s() error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
 	goto ExitError;
 ErrorOthers:
-	fprintf(stderr, "*** %s() error - %s ***\n", FunctionName, ErrorDesc.c_str());
+	fprintf(stderr, "*** %s error - %s ***\n", FunctionName, ErrorDesc.c_str());
 ExitError:
 	this->free();
 	return PNM_FUNCTION_ERROR;
@@ -427,13 +427,13 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, doubl
 	return PNM_FUNCTION_SUCCESS;
 // Error
 ErrorMalloc:
-	fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
 	goto ExitError;
 ErrorPointerNull:
-	fprintf(stderr, "*** %s() error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
 	goto ExitError;
 ErrorOthers:
-	fprintf(stderr, "*** %s() error - %s ***\n", FunctionName, ErrorValueName.c_str());
+	fprintf(stderr, "*** %s error - %s ***\n", FunctionName, ErrorValueName.c_str());
 ExitError:
 	this->free();
 	return PNM_FUNCTION_ERROR;
