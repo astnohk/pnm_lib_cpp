@@ -99,11 +99,13 @@ PNM_DOUBLE::copy(const PNM_DOUBLE &pnmd)
 		ErrorValueName = "pnmd.imgd";
 		goto ErrorPointerNull;
 	}
+	if (imgd != nullptr) {
+		this->free();
+	}
 	desc = pnmd.desc;
 	width = pnmd.width;
 	height = pnmd.height;
 	maxint = pnmd.maxint;
-	delete[] imgd;
 	if (desc % 3 == 0) {
 		try {
 			imgd = new pnm_img_double[3 * width * height];
@@ -153,14 +155,15 @@ PNM_DOUBLE::copy(const PNM &pnm_int, double coeff)
 	if (fabs(coeff) <= 1.0 / pnm_int.MaxInt()) {
 		fprintf(stderr, "*** %s() warning - The coefficient is ZERO ***\n", FunctionName);
 	}
+	if (imgd != nullptr) {
+		this->free();
+	}
 
 	desc = pnm_int.Desc();
 	width = pnm_int.Width();
 	height = pnm_int.Height();
 	maxint = pnm_int.MaxInt();
 	img_data = pnm_int.Data();
-	// Clear *imgd
-	delete[] imgd;
 	switch (desc) {
 		case PORTABLE_BITMAP_ASCII:
 		case PORTABLE_GRAYMAP_ASCII:
@@ -226,6 +229,9 @@ PNM_DOUBLE::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data
 	} else if (Width < 0 || Height < 0) {
 		ErrorDesc = "The size of image is invalid";
 		goto ErrorOthers;
+	}
+	if (imgd != nullptr) {
+		this->free();
 	}
 	desc = Descriptor;
 	width = Width;

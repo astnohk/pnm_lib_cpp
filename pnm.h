@@ -1,6 +1,6 @@
-// For compiler before C++11
-//#define nullptr NULL
-// /For compiler before C++11
+// For old compiler before C++11
+#define nullptr NULL
+
 
 // C++
 #include <cmath>

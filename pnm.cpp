@@ -190,11 +190,13 @@ PNM::copy(const PNM &pnm)
 		ErrorValueName = "pnm.img";
 		goto ErrorPointerNull;
 	}
+	if (img != nullptr) {
+		this->free();
+	}
 	desc = pnm.desc;
 	width = pnm.width;
 	height = pnm.height;
 	maxint = pnm.maxint;
-	delete[] img;
 	if (desc % 3 == 0) {
 		try {
 			img = new pnm_img[3 * width * height];
@@ -245,14 +247,14 @@ PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 	if (fabs(coeff) < 1.0 / pnm_double.MaxInt()) {
 		fprintf(stderr, "*** %s() warning - The coefficient is ZERO ***\n", FunctionName);
 	}
-
+	if (img != nullptr) {
+		this->free();
+	}
 	desc = pnm_double.Desc();
 	width = pnm_double.Width();
 	height = pnm_double.Height();
 	maxint = pnm_double.MaxInt();
 	imgd_data = pnm_double.Data();
-	// Clear *img
-	delete[] img;
 	if (process != nullptr) {
 		if (strcmp(process, "floor") == 0) {
 			FRC = .0;
@@ -328,6 +330,9 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 		ErrorDesc = "The size of image is invalid";
 		goto ErrorOthers;
 	}
+	if (img != nullptr) {
+		this->free();
+	}
 	desc = Descriptor;
 	width = Width;
 	height = Height;
@@ -388,6 +393,9 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, doubl
 	} else if (Width < 0 || Height < 0) {
 		ErrorDesc = "The size of image is invalid";
 		goto ErrorOthers;
+	}
+	if (img != nullptr) {
+		this->free();
 	}
 	desc = Descriptor;
 	width = Width;
