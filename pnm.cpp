@@ -245,7 +245,7 @@ PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 		goto ErrorPointerNull;
 	}
 	if (fabs(coeff) < 1.0 / pnm_double.MaxInt()) {
-		fprintf(stderr, "*** %s() warning - The coefficient is ZERO ***\n", FunctionName);
+		fprintf(stderr, "*** %s() warning - The coefficient is nearly ZERO ***\n", FunctionName);
 	}
 	if (img != nullptr) {
 		this->free();
