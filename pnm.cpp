@@ -159,6 +159,12 @@ PNM::Data(void) const
 	return img;
 }
 
+pnm_img &
+PNM::operator[](int n) const
+{
+	return img[n];
+}
+
 pnm_img
 PNM::Image(int x, int y) const
 {

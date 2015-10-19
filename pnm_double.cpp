@@ -68,6 +68,12 @@ PNM_DOUBLE::Data(void) const
 	return imgd;
 }
 
+pnm_img_double &
+PNM_DOUBLE::operator[](int n) const
+{
+	return imgd[n];
+}
+
 pnm_img_double
 PNM_DOUBLE::Image(int x, int y) const
 {

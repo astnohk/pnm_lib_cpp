@@ -79,7 +79,7 @@ class PNM_FORMAT
 	public:
 		PNM_FORMAT(void);
 		PNM_FORMAT(const PNM_FORMAT &pnm);
-		~PNM_FORMAT(void);
+		virtual ~PNM_FORMAT(void);
 		// Access
 		int Desc() const;
 		int Width() const;
@@ -102,8 +102,9 @@ class PNM : public PNM_FORMAT
 	public:
 		PNM(void);
 		PNM(const PNM &pnm);
-		~PNM(void);
+		virtual ~PNM(void);
 		pnm_img* Data(void) const;
+		pnm_img& operator[](int n) const;
 		pnm_img Image(int x, int y) const;
 		void free(void);
 		int copy(const PNM &pnm);
@@ -125,9 +126,10 @@ class PNM_DOUBLE : public PNM_FORMAT
 	public:
 		PNM_DOUBLE(void);
 		PNM_DOUBLE(const PNM_DOUBLE &pnmd);
-		~PNM_DOUBLE(void);
+		virtual ~PNM_DOUBLE(void);
 		// Library
 		pnm_img_double* Data(void) const;
+		pnm_img_double& operator[](int n) const;
 		pnm_img_double Image(int x, int y) const;
 		void free(void);
 		int copy(const PNM_DOUBLE &pnmd);
