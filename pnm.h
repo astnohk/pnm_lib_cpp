@@ -1,5 +1,7 @@
 // For old compiler before C++11
+#ifndef nullptr
 #define nullptr NULL
+#endif
 
 
 // C++
@@ -10,6 +12,13 @@
 #include <string>
 // C
 #include <stdint.h>
+
+
+// Start definitions of pnm_lib_cpp
+#ifndef LIB_PNM_LIB_CPP
+#define LIB_PNM_LIB_CPP
+
+
 
 
 #define BITS_OF_BYTE 8
@@ -152,4 +161,7 @@ extern std::string pnm_FixExtension(const char *filename, int desc);
 extern int pnm_resize(PNM_DOUBLE *pnm_out, const PNM_DOUBLE &pnm_in, int width_o, int height_o, int Method);
 extern int pnm_Bicubic(PNM_DOUBLE *pnm_out, const PNM_DOUBLE &pnm_in, double alpha, int width_o, int height_o);
 extern double pnm_Cubic(double x, double a);
+
+// End of definition of pnm_lib_cpp
+#endif
 
