@@ -21,10 +21,6 @@ PNM_FORMAT::PNM_FORMAT(const PNM_FORMAT &pnm)
 
 PNM_FORMAT::~PNM_FORMAT(void)
 {
-	desc = 0;
-	width = 0;
-	height = 0;
-	maxint = 0;
 }
 
 int
