@@ -94,6 +94,7 @@ class PNM_FORMAT
 		int Width() const;
 		int Height() const;
 		int MaxInt() const;
+		int Size() const;
 		// Library
 		int bitdepth(void) const;
 		bool isNULL(void) const;

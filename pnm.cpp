@@ -42,6 +42,12 @@ PNM_FORMAT::Height(void) const
 }
 
 int
+PNM_FORMAT::Size(void) const
+{
+	return width * height;
+}
+
+int
 PNM_FORMAT::MaxInt(void) const
 {
 	return maxint;
