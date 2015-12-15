@@ -1,7 +1,9 @@
 // For old compiler before C++11
+/*
 #ifndef nullptr
 #define nullptr NULL
 #endif
+*/
 
 
 // C++
@@ -9,6 +11,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <stdexcept>
 #include <string>
 // C
 #include <stdint.h>
@@ -159,9 +162,10 @@ extern bool fcommentf(FILE *, int *);
 extern std::string pnm_FixExtension(const char *filename, int desc);
 
 // Resize
-extern int pnm_resize(PNM_DOUBLE *pnm_out, const PNM_DOUBLE &pnm_in, int width_o, int height_o, int Method);
-extern int pnm_Bicubic(PNM_DOUBLE *pnm_out, const PNM_DOUBLE &pnm_in, double alpha, int width_o, int height_o);
-extern double pnm_Cubic(double x, double a);
+extern void pnm_resize(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width_o, const int height_o, const int Method);
+extern void pnm_ZeroOrderHold(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width_o, const int height_o);
+extern void pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, const int width_o, const int height_o);
+extern double pnm_Cubic(const double x, const double a);
 
 // End of definition of pnm_lib_cpp
 #endif
