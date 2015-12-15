@@ -184,26 +184,34 @@ pnm_ZeroOrderHold(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width
 	pnm_img_double* imgd_data = pnm_in.Data();
 	for (int y = 0; y < height_o; y++) {
 		for (int x = 0; x < width_o; x++) {
-			double sum = .0;
-			for (int m = 0; m < area_y; m++) {
-				for (int n = 0; n < area_x; n++) {
-					sum += imgd_data[width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+			{
+				double sum = .0;
+				for (int m = 0; m < area_y; m++) {
+					for (int n = 0; n < area_x; n++) {
+						sum += imgd_data[width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+					}
 				}
+				Image[width_o * y + x] = sum / (area_x * area_y);
 			}
-			Image[width_o * y + x] = sum / (area_x * area_y);
 			if (pnm_in.isRGB()) {
-				for (int m = 0; m < area_y; m++) {
-					for (int n = 0; n < area_x; n++) {
-						sum += imgd_data[width_i * height_i + width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+				{
+					double sum = .0;
+					for (int m = 0; m < area_y; m++) {
+						for (int n = 0; n < area_x; n++) {
+							sum += imgd_data[width_i * height_i + width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+						}
 					}
+					Image[height_o * width_o + width_o * y + x] = sum / (area_x * area_y);
 				}
-				Image[height_o * width_o + width_o * y + x] = sum / (area_x * area_y);
-				for (int m = 0; m < area_y; m++) {
-					for (int n = 0; n < area_x; n++) {
-						sum += imgd_data[2 * width_i * height_i + width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+				{
+					double sum = .0;
+					for (int m = 0; m < area_y; m++) {
+						for (int n = 0; n < area_x; n++) {
+							sum += imgd_data[2 * width_i * height_i + width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+						}
 					}
+					Image[2 * height_o * width_o + width_o * y + x] = sum / (area_x * area_y);
 				}
-				Image[2 * height_o * width_o + width_o * y + x] = sum / (area_x * area_y);
 			}
 		}
 	}
