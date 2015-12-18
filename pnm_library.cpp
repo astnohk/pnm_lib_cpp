@@ -32,7 +32,7 @@ fcommentf(FILE *fp, int *ret)
 					fprintf(stderr, "*** pnmread error - fgetc returns EOF ***\n");
 					return false;
 				}
-				c = (char)c_int;
+				c = char(c_int);
 				if (c != '\n') {
 					printf("%c", c);
 				}
@@ -133,6 +133,7 @@ pnm_resize(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width_o, con
 				pnm_ZeroOrderHold(pnm_out, pnm_in, width_o, height_o);
 			}
 			catch (const std::bad_alloc& bad) {
+				std::cerr << bad.what() << std::endl;
 				ErrorFunctionName = "pnm_Bicubic";
 				ErrorValueName = "pnm_out <- pnm_in";
 				fprintf(stderr, "*** %s() error - %s() failed to compute (%s) ***\n", FunctionName, ErrorFunctionName.c_str(), ErrorValueName.c_str());
@@ -146,12 +147,14 @@ pnm_resize(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width_o, con
 				pnm_Bicubic(pnm_out, pnm_in, alpha, width_o, height_o);
 			}
 			catch (const std::bad_alloc& bad) {
+				std::cerr << bad.what() << std::endl;
 				ErrorFunctionName = "pnm_Bicubic";
 				ErrorValueName = "pnm_out <- pnm_in";
 				fprintf(stderr, "*** %s() error - %s() failed to compute (%s) ***\n", FunctionName, ErrorFunctionName.c_str(), ErrorValueName.c_str());
 				throw;
 			}
 			catch (const std::invalid_argument& arg) {
+				std::cerr << arg.what() << std::endl;
 				ErrorFunctionName = "pnm_Bicubic";
 				ErrorValueName = "pnm_out <- pnm_in";
 				fprintf(stderr, "*** %s() error - %s() failed to compute (%s) ***\n", FunctionName, ErrorFunctionName.c_str(), ErrorValueName.c_str());
@@ -175,12 +178,13 @@ pnm_ZeroOrderHold(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width
 		}
 	}
 	catch (const std::bad_alloc &bad) {
+		std::cerr << bad.what() << std::endl;
 		throw;
 	}
-	int area_x = ceil((double)width_i / width_o);
-	int area_y = ceil((double)height_i / height_o);
-	double scale_x = (double)width_o / width_i;
-	double scale_y = (double)height_o / height_i;
+	int area_x = int(ceil(double(width_i) / double(width_o)));
+	int area_y = int(ceil(double(height_i) / double(height_o)));
+	double scale_x = double(width_o) / double(width_i);
+	double scale_y = double(height_o) / double(height_i);
 	pnm_img_double* imgd_data = pnm_in.Data();
 	for (int y = 0; y < height_o; y++) {
 		for (int x = 0; x < width_o; x++) {
@@ -188,7 +192,7 @@ pnm_ZeroOrderHold(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width
 				double sum = .0;
 				for (int m = 0; m < area_y; m++) {
 					for (int n = 0; n < area_x; n++) {
-						sum += imgd_data[width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+						sum += imgd_data[width_i * (int(floor(y / scale_y)) + m) + int(floor(x / scale_x)) + n];
 					}
 				}
 				Image[width_o * y + x] = sum / (area_x * area_y);
@@ -198,7 +202,7 @@ pnm_ZeroOrderHold(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width
 					double sum = .0;
 					for (int m = 0; m < area_y; m++) {
 						for (int n = 0; n < area_x; n++) {
-							sum += imgd_data[width_i * height_i + width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+							sum += imgd_data[width_i * height_i + width_i * (int(floor(y / scale_y)) + m) + int(floor(x / scale_x)) + n];
 						}
 					}
 					Image[height_o * width_o + width_o * y + x] = sum / (area_x * area_y);
@@ -207,7 +211,7 @@ pnm_ZeroOrderHold(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width
 					double sum = .0;
 					for (int m = 0; m < area_y; m++) {
 						for (int n = 0; n < area_x; n++) {
-							sum += imgd_data[2 * width_i * height_i + width_i * ((int)floor(y / scale_y) + m) + (int)floor(x / scale_x) + n];
+							sum += imgd_data[2 * width_i * height_i + width_i * (int(floor(y / scale_y)) + m) + int(floor(x / scale_x)) + n];
 						}
 					}
 					Image[2 * height_o * width_o + width_o * y + x] = sum / (area_x * area_y);
@@ -221,7 +225,7 @@ pnm_ZeroOrderHold(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width
 			if (Image[x] < .0) {
 				Image[x] = .0;
 			} else if (Image[x] > pnm_in.MaxInt()) {
-				Image[x] = (double)pnm_in.MaxInt();
+				Image[x] = double(pnm_in.MaxInt());
 			}
 		}
 	} else {
@@ -229,7 +233,7 @@ pnm_ZeroOrderHold(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width
 			if (Image[x] < .0) {
 				Image[x] = .0;
 			} else if (Image[x] > pnm_in.MaxInt()) {
-				Image[x] = (double)pnm_in.MaxInt();
+				Image[x] = double(pnm_in.MaxInt());
 			}
 		}
 	}
@@ -249,13 +253,14 @@ pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, c
 	}
 	int width_i = pnm_in.Width();
 	int height_i = pnm_in.Height();
-	double scale_x = (double)width_o / width_i;
-	double scale_y = (double)height_o / height_i;
+	double scale_x = double(width_o) / double(width_i);
+	double scale_y = double(height_o) / double(height_i);
 	try {
 		Tmp = new double[width_o * height_i * (pnm_in.isRGB() ? 3 : 1)];
 		Image = new double[width_o * height_o * (pnm_in.isRGB() ? 3 : 1)];
 	}
 	catch (const std::bad_alloc &bad) {
+		std::cerr << bad.what() << std::endl;
 		throw;
 	}
 	// The length of cubic convolution coefficient
@@ -264,9 +269,10 @@ pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, c
 		scale_conv = ceil(1.0 / (scale_x < scale_y ? scale_x : scale_y));
 	}
 	try {
-		conv = new double[(int)scale_conv * 4];
+		conv = new double[int(scale_conv) * 4];
 	}
 	catch (const std::bad_alloc &bad) {
+		std::cerr << bad.what() << std::endl;
 		delete[] Tmp;
 		delete[] Image;
 		throw;
@@ -283,10 +289,10 @@ pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, c
 			scale_conv = 1.0 / scale_x;
 			dx = x / scale_x + (1.0 / scale_x - 1.0) / 2.0;
 		}
-		int L = 4 * (int)ceil(scale_conv);
-		int L_center = floor((L - 1.0) / 2);
+		int L = 4 * int(ceil(scale_conv));
+		int L_center = int(floor((L - 1.0) / 2));
 		for (int n = 0; n < L; n++) {
-			conv[n] = pnm_Cubic(((double)(n - L_center) - (dx - floor(dx))) / scale_conv, alpha);
+			conv[n] = pnm_Cubic((double(n - L_center) - (dx - floor(dx))) / scale_conv, alpha);
 			conv[n] /= scale_conv;
 		}
 		for (int y = 0; y < height_i; y++) {
@@ -296,7 +302,7 @@ pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, c
 				Tmp[2 * width_o * height_i + width_o * y + x] = .0;
 			}
 			for (int n = 0; n < L; n++) {
-				int index = (int)floor(dx) + n - L_center;
+				int index = int(floor(dx)) + n - L_center;
 				if (index < 0) {
 					index = abs(index) - 1;
 				} else if (index >= width_i) {
@@ -323,10 +329,10 @@ pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, c
 			scale_conv = 1.0 / scale_y;
 			dy = y / scale_y + (1.0 / scale_y - 1.0) / 2.0;
 		}
-		int L = 4 * (int)ceil(scale_conv);
-		int L_center = floor((L - 1.0) / 2);
+		int L = 4 * int(ceil(scale_conv));
+		int L_center = int(floor((L - 1.0) / 2));
 		for (int m = 0; m < L; m++) {
-			conv[m] = pnm_Cubic(((double)(m - L_center) - (dy - floor(dy))) / scale_conv, alpha);
+			conv[m] = pnm_Cubic((double(m - L_center) - (dy - floor(dy))) / scale_conv, alpha);
 			conv[m] /= scale_conv;
 		}
 		for (int x = 0; x < width_o; x++) {
@@ -336,7 +342,7 @@ pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, c
 				Image[2 * width_o * height_o + width_o * y + x] = .0;
 			}
 			for (int m = 0; m < L; m++) {
-				int index = (int)floor(dy) + m - L_center;
+				int index = int(floor(dy)) + m - L_center;
 				if (index < 0) {
 					index = abs(index) - 1;
 				} else if (index >= height_i) {
@@ -357,7 +363,7 @@ pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, c
 			if (Image[x] < .0) {
 				Image[x] = .0;
 			} else if (Image[x] > pnm_in.MaxInt()) {
-				Image[x] = (double)pnm_in.MaxInt();
+				Image[x] = double(pnm_in.MaxInt());
 			}
 		}
 	} else {
@@ -365,7 +371,7 @@ pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const double alpha, c
 			if (Image[x] < .0) {
 				Image[x] = .0;
 			} else if (Image[x] > pnm_in.MaxInt()) {
-				Image[x] = (double)pnm_in.MaxInt();
+				Image[x] = double(pnm_in.MaxInt());
 			}
 		}
 	}

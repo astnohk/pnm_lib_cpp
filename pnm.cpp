@@ -56,7 +56,7 @@ PNM_FORMAT::MaxInt(void) const
 int
 PNM_FORMAT::bitdepth(void) const
 {
-	return (int)round(log2(maxint + 1.0));
+	return int(round(log2(maxint + 1.0)));
 }
 
 bool
@@ -123,6 +123,7 @@ PNM::PNM(const PNM &pnm) : PNM_FORMAT(pnm)
 			img = new pnm_img[3 * width * height];
 		}
 		catch (const std::bad_alloc &bad) {
+			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ExitError;
 		}
@@ -134,6 +135,7 @@ PNM::PNM(const PNM &pnm) : PNM_FORMAT(pnm)
 			img = new pnm_img[width * height];
 		}
 		catch (const std::bad_alloc &bad) {
+			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ExitError;
 		}
@@ -210,6 +212,7 @@ PNM::copy(const PNM &pnm)
 			img = new pnm_img[3 * width * height];
 		}
 		catch (const std::bad_alloc &bad) {
+			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
@@ -221,6 +224,7 @@ PNM::copy(const PNM &pnm)
 			img = new pnm_img[width * height];
 		}
 		catch (const std::bad_alloc &bad) {
+			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
@@ -281,11 +285,12 @@ PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 				img = new pnm_img[width * height];
 			}
 			catch (const std::bad_alloc &bad) {
+				std::cerr << bad.what() << std::endl;
 				ErrorValueName = "img";
 				goto ErrorMalloc;
 			}
 			for (int i = 0; i < width * height; i++) {
-				img[i] = (pnm_img)floor(coeff * imgd_data[i] + FRC);
+				img[i] = pnm_img(floor(coeff * imgd_data[i] + FRC));
 			}
 			break;
 		case PORTABLE_PIXMAP_ASCII:
@@ -294,13 +299,14 @@ PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
 				img = new pnm_img[3 * width * height];
 			}
 			catch (const std::bad_alloc &bad) {
+				std::cerr << bad.what() << std::endl;
 				ErrorValueName = "img";
 				goto ErrorMalloc;
 			}
 			for (int i = 0; i < width * height; i++) {
-				img[i] = (pnm_img)floor(coeff * imgd_data[i] + FRC);
-				img[width * height + i] = (pnm_img)floor(coeff * imgd_data[width * height + i] + FRC);
-				img[2 * width * height + i] = (pnm_img)floor(coeff * imgd_data[2 * width * height + i] + FRC);
+				img[i] = pnm_img(floor(coeff * imgd_data[i] + FRC));
+				img[width * height + i] = pnm_img(floor(coeff * imgd_data[width * height + i] + FRC));
+				img[2 * width * height + i] = pnm_img(floor(coeff * imgd_data[2 * width * height + i] + FRC));
 			}
 			break;
 		default: // ERROR
@@ -350,6 +356,7 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 			img = new pnm_img[3 * width * height];
 		}
 		catch (const std::bad_alloc &bad) {
+			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
@@ -361,6 +368,7 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 			img = new pnm_img[width * height];
 		}
 		catch (const std::bad_alloc &bad) {
+			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
@@ -384,9 +392,9 @@ ExitError:
 }
 
 int
-PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, double coeff)
+PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double* Data, double coeff)
 {
-	const char *FunctionName = "PNM::copy(int, int, int, int, double*, double)";
+	const char* FunctionName = "PNM::copy(int, int, int, int, double*, double)";
 	std::string ErrorValueName;
 	std::string ErrorDesc;
 
@@ -414,22 +422,24 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, doubl
 			img = new pnm_img[3 * width * height];
 		}
 		catch (const std::bad_alloc &bad) {
+			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
 		for (int i = 0; i < 3 * width * height; i++) {
-			img[i] = coeff * Data[i];
+			img[i] = pnm_img(coeff * Data[i]);
 		}
 	} else {
 		try {
 			img = new pnm_img[width * height];
 		}
 		catch (const std::bad_alloc &bad) {
+			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
 		for (int i = 0; i < width * height; i++) {
-			img[i] = coeff * Data[i];
+			img[i] = pnm_img(coeff * Data[i]);
 		}
 	}
 	return PNM_FUNCTION_SUCCESS;
@@ -457,6 +467,7 @@ PNM::get_int(void) const
 		Image = new int[width * height];
 	}
 	catch (const std::bad_alloc &bad) {
+		std::cerr << bad.what() << std::endl;
 		fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, "Image");
 		return nullptr;
 	}
@@ -476,30 +487,31 @@ PNM::get_double(void) const
 		Image = new double[width * height];
 	}
 	catch (const std::bad_alloc &bad) {
+		std::cerr << bad.what() << std::endl;
 		fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, "Image");
 		return nullptr;
 	}
 	for (int n = 0; n < width * height; n++) {
-		Image[n] = (double)img[n];
+		Image[n] = double(img[n]);
 	}
 	return Image;
 }
 
 int
-PNM::read(const char *filename)
+PNM::read(const char* filename)
 {
-	const char *FunctionName = "PNM::read";
+	const char* FunctionName = "PNM::read";
 	std::string ErrorFunctionName;
 	std::string ErrorValueName;
 	std::string ErrorFileName;
 	std::string ErrorDescription;
 
-	uint8_t *img_uint8 = nullptr;
+	uint8_t* img_uint8 = nullptr;
 	char FileDescriptor[PNM_DESCRIPTOR_LENGTH];
 	int width_tmp = 0;
 	int m, n, byte;
 	int test;
-	FILE *fp = nullptr;
+	FILE* fp = nullptr;
 
 	if (img != nullptr) {
 		this->free();
@@ -521,7 +533,7 @@ PNM::read(const char *filename)
 	}
 
 	printf("\n--- Reading from \"%s\" ---\n  FileDescriptor : %s\n", filename, FileDescriptor);
-	desc = (int)FileDescriptor[1] - (int)'0';
+	desc = int(FileDescriptor[1]) - int('0');
 	switch (desc) {
 		case PORTABLE_BITMAP_ASCII: // Portable Bitmap ASCII
 		case PORTABLE_BITMAP_BINARY: // Portable Bitmap Binary
@@ -544,6 +556,7 @@ PNM::read(const char *filename)
 				img = new pnm_img[width * height];
 			}
 			catch (const std::bad_alloc &bad) {
+				std::cerr << bad.what() << std::endl;
 				ErrorFunctionName = "new";
 				ErrorValueName = "img";
 				goto ErrorMalloc;
@@ -560,16 +573,17 @@ PNM::read(const char *filename)
 					goto ErrorRead;
 				}
 			} else {
-				width_tmp = ceil((double)width / BITS_OF_BYTE);
+				width_tmp = int(ceil(double(width) / double(BITS_OF_BYTE)));
 				try {
 					img_uint8 = new uint8_t[width_tmp * height];
 				}
 				catch (const std::bad_alloc &bad) {
+					std::cerr << bad.what() << std::endl;
 					ErrorFunctionName = "new";
 					ErrorValueName = "img_uint8";
 					goto ErrorMalloc;
 				}
-				if (fread(img_uint8, sizeof(uint8_t), (size_t)width_tmp * height, fp) != (size_t)width_tmp * height) {
+				if (fread(img_uint8, sizeof(uint8_t), size_t(width_tmp * height), fp) != size_t(width_tmp * height)) {
 					ErrorFunctionName = "fread";
 					ErrorValueName = "img_uint8";
 					goto ErrorRead;
@@ -605,6 +619,7 @@ PNM::read(const char *filename)
 				img = new pnm_img[width * height];
 			}
 			catch (const std::bad_alloc &bad) {
+				std::cerr << bad.what() << std::endl;
 				ErrorFunctionName = "new";
 				ErrorValueName = "img";
 				goto ErrorMalloc;
@@ -626,17 +641,18 @@ PNM::read(const char *filename)
 						img_uint8 = new uint8_t[2 * width * height]; // 2 times the size for 16-bit
 					}
 					catch (const std::bad_alloc &bad) {
+						std::cerr << bad.what() << std::endl;
 						ErrorFunctionName = "new";
 						ErrorValueName = "img_uint8";
 						goto ErrorMalloc;
 					}
-					if (fread(img_uint8, sizeof(uint8_t), (size_t)2 * width * height, fp) != (size_t)2 * width * height) {
+					if (fread(img_uint8, sizeof(uint8_t), 2u * size_t(width) * size_t(height), fp) != 2u * size_t(width) * size_t(height)) {
 						ErrorFunctionName = "fread";
 						ErrorValueName = "img_uint8";
 						goto ErrorRead;
 					}
 					for (m = 0; m < width * height; m++) {
-						img[m] = (int)(img_uint8[2 * m] << 8) + (int)img_uint8[2 * m + 1];
+						img[m] = int((img_uint8[2 * m] << 8) + img_uint8[2 * m + 1]);
 					}
 				} else {
 					// 8-bit data
@@ -644,17 +660,18 @@ PNM::read(const char *filename)
 						img_uint8 = new uint8_t[width * height];
 					}
 					catch (const std::bad_alloc &bad) {
+						std::cerr << bad.what() << std::endl;
 						ErrorFunctionName = "new";
 						ErrorValueName = "img_uint8";
 						goto ErrorMalloc;
 					}
-					if (fread(img_uint8, sizeof(uint8_t), (size_t)width * height, fp) != (size_t)width * height) {
+					if (fread(img_uint8, sizeof(uint8_t), size_t(width * height), fp) != size_t(width * height)) {
 						ErrorFunctionName = "fread";
 						ErrorValueName = "img_uint8";
 						goto ErrorRead;
 					}
 					for (m = 0; m < width * height; m++) {
-						img[m] = (int)img_uint8[m];
+						img[m] = int(img_uint8[m]);
 					}
 				}
 			}
@@ -680,6 +697,7 @@ PNM::read(const char *filename)
 				img = new pnm_img[3 * width * height];
 			}
 			catch (const std::bad_alloc &bad) {
+				std::cerr << bad.what() << std::endl;
 				ErrorFunctionName = "new";
 				ErrorValueName = "img";
 				goto ErrorMalloc;
@@ -703,20 +721,21 @@ PNM::read(const char *filename)
 						img_uint8 = new uint8_t[2 * 3 * width]; // 2 times the size for 16-bit
 					}
 					catch (const std::bad_alloc &bad) {
+						std::cerr << bad.what() << std::endl;
 						ErrorFunctionName = "new";
 						ErrorValueName = "img_uint8";
 						goto ErrorMalloc;
 					}
 					for (m = 0; m < height; m++) {
-						if (fread(img_uint8, sizeof(uint8_t), (size_t)2 * 3 * width, fp) != (size_t)2 * 3 * width) {
+						if (fread(img_uint8, sizeof(uint8_t), 2u * 3u * size_t(width), fp) != 2u * 3u * size_t(width)) {
 							ErrorFunctionName = "fread";
 							ErrorValueName = "img_uint8";
 							goto ErrorRead;
 						}
 						for (n = 0; n < width; n++) {
-							img[width * m + n] = (int)(img_uint8[2 * 3 * n] << 8) + (int)img_uint8[2 * 3 * n + 1];
-							img[width * height + width * m + n] = (int)(img_uint8[2 * 3 * n + 2] << 8) + (int)img_uint8[2 * 3 * n + 3];
-							img[2 * width * height + width * m + n] = (int)(img_uint8[2 * 3 * n + 4] << 8) + (int)img_uint8[2 * 3 * n + 5];
+							img[width * m + n] = int((img_uint8[2 * 3 * n] << 8) + img_uint8[2 * 3 * n + 1]);
+							img[width * height + width * m + n] = int((img_uint8[2 * 3 * n + 2] << 8) + img_uint8[2 * 3 * n + 3]);
+							img[2 * width * height + width * m + n] = int((img_uint8[2 * 3 * n + 4] << 8) + img_uint8[2 * 3 * n + 5]);
 						}
 					}
 				} else {
@@ -725,20 +744,21 @@ PNM::read(const char *filename)
 						img_uint8 = new uint8_t[3 * width];
 					}
 					catch (const std::bad_alloc &bad) {
+						std::cerr << bad.what() << std::endl;
 						ErrorFunctionName = "new";
 						ErrorValueName = "img_uint8";
 						goto ErrorMalloc;
 					}
 					for (m = 0; m < height; m++) {
-						if (fread(img_uint8, sizeof(uint8_t), (size_t)3 * width, fp) != (size_t)3 * width) {
+						if (fread(img_uint8, sizeof(uint8_t), 3u * size_t(width), fp) != 3u * size_t(width)) {
 							ErrorFunctionName = "fread";
 							ErrorValueName = "img_uint8";
 							goto ErrorRead;
 						}
 						for (n = 0; n < width; n++) {
-							img[width * m + n] = (int)img_uint8[3 * n];
-							img[width * height + width * m + n] = (int)img_uint8[3 * n + 1];
-							img[2 * width * height + width * m + n] = (int)img_uint8[3 * n + 2];
+							img[width * m + n] = int(img_uint8[3 * n]);
+							img[width * height + width * m + n] = int(img_uint8[3 * n + 1]);
+							img[2 * width * height + width * m + n] = int(img_uint8[3 * n + 2]);
 						}
 					}
 				}
@@ -787,18 +807,18 @@ ErrorReturn:
 }
 
 int
-PNM::write(const char *filename)
+PNM::write(const char* filename)
 {
 	const char *FunctionName = "PNM::write";
 	std::string ErrorFunctionName;
 	std::string ErrorValueName;
 
 	std::string fixed_filename;
-	uint8_t *img_uint8 = nullptr;
+	uint8_t* img_uint8 = nullptr;
 	int width_tmp = 0;
 	int m, n;
 	int byte;
-	FILE *fp = nullptr;
+	FILE* fp = nullptr;
 
 	if (img == nullptr) {
 		ErrorValueName = "img";
@@ -845,11 +865,12 @@ PNM::write(const char *filename)
 			break;
 		case PORTABLE_BITMAP_BINARY: // Bitmap
 			// 16-bit and 8-bit data
-			width_tmp = ceil((double)width / BITS_OF_BYTE);
+			width_tmp = int(ceil(double(width) / double(BITS_OF_BYTE)));
 			try {
 				img_uint8 = new uint8_t[width_tmp * height];
 			}
 			catch (const std::bad_alloc &bad) {
+				std::cerr << bad.what() << std::endl;
 				ErrorFunctionName = "new";
 				ErrorValueName = "img_uint8";
 				goto ErrorMalloc;
@@ -859,14 +880,14 @@ PNM::write(const char *filename)
 					for (byte = 0; byte < BITS_OF_BYTE; byte++) {
 						img_uint8[width_tmp * m + n] <<= 1;
 						if (BITS_OF_BYTE * n + byte < width
-						    && img[width * m + BITS_OF_BYTE * n + byte] < (int)(maxint + 1) / 2) {
+						    && img[width * m + BITS_OF_BYTE * n + byte] < (maxint + 1) / 2) {
 							img_uint8[width_tmp * m + n] |= 1u;
 						}
 					}
 				}
 			}
 			fprintf(fp, "P4\n%d %d\n", width, height);
-			if (fwrite(img_uint8, sizeof(uint8_t), (size_t)width_tmp * height, fp) != (size_t)width_tmp * height) {
+			if (fwrite(img_uint8, sizeof(uint8_t), size_t(width_tmp) * size_t(height), fp) != size_t(width_tmp) * size_t(height)) {
 				ErrorFunctionName = "fwrite";
 				ErrorValueName = "*img_uint8";
 				goto ErrorFunctionFailed;
@@ -880,15 +901,16 @@ PNM::write(const char *filename)
 					img_uint8 = new uint8_t[2 * width * height]; // 2 times the size for 16-bit
 				}
 				catch (const std::bad_alloc &bad) {
+					std::cerr << bad.what() << std::endl;
 					ErrorFunctionName = "new";
 					ErrorValueName = "img_uint8";
 					goto ErrorMalloc;
 				}
 				for (m = 0; m < width * height; m++) {
-					img_uint8[2 * m] = (uint8_t)(((unsigned int)img[m] >> 8) & 0xFF);
-					img_uint8[2 * m + 1] = (uint8_t)((unsigned int)img[m] & 0xFF);
+					img_uint8[2 * m] = uint8_t((static_cast<unsigned int>(img[m]) >> 8) & 0xFF);
+					img_uint8[2 * m + 1] = uint8_t(static_cast<unsigned int>(img[m]) & 0xFF);
 				}
-				if (fwrite(img_uint8, sizeof(uint8_t), (size_t)2 * width * height, fp) != (size_t)2 * width * height) {
+				if (fwrite(img_uint8, sizeof(uint8_t), 2u * size_t(width) * size_t(height), fp) != 2u * size_t(width) * size_t(height)) {
 					ErrorFunctionName = "fwrite";
 					ErrorValueName = "img_uint8";
 					goto ErrorFunctionFailed;
@@ -899,14 +921,15 @@ PNM::write(const char *filename)
 					img_uint8 = new uint8_t[width * height];
 				}
 				catch (const std::bad_alloc &bad) {
+					std::cerr << bad.what() << std::endl;
 					ErrorFunctionName = "new";
 					ErrorValueName = "img_uint8";
 					goto ErrorMalloc;
 				}
 				for (m = 0; m < width * height; m++) {
-					img_uint8[m] = (uint8_t)((unsigned int)img[m] & 0xFF);
+					img_uint8[m] = uint8_t(static_cast<unsigned int>(img[m]) & 0xFF);
 				}
-				if (fwrite(img_uint8, sizeof(uint8_t), (size_t)width * height, fp) != (size_t)width * height) {
+				if (fwrite(img_uint8, sizeof(uint8_t), size_t(width) * size_t(height), fp) != size_t(width) * size_t(height)) {
 					ErrorFunctionName = "fwrite";
 					ErrorValueName = "img_uint8";
 					goto ErrorFunctionFailed;
@@ -921,19 +944,20 @@ PNM::write(const char *filename)
 					img_uint8 = new uint8_t[2 * 3 * width * height]; // 2 times the size for 16-bit
 				}
 				catch (const std::bad_alloc &bad) {
+					std::cerr << bad.what() << std::endl;
 					ErrorFunctionName = "new";
 					ErrorValueName = "img_uint8";
 					goto ErrorMalloc;
 				}
 				for (m = 0; m < width * height; m++) {
-					img_uint8[6 * m + 1] = (uint8_t)(((unsigned int)img[m] >> 8) & 0xFF); /* Higher 8-bit */
-					img_uint8[6 * m + 2] = (uint8_t)((unsigned int)img[m] & 0xFF); /* Lower 8-bit */
-					img_uint8[6 * m + 3] = (uint8_t)(((unsigned int)img[width * height + m] >> 8) & 0xFF); /* Higher 8-bit */
-					img_uint8[6 * m + 4] = (uint8_t)((unsigned int)img[width * height + m] & 0xFF); /* Lower 8-bit */
-					img_uint8[6 * m + 5] = (uint8_t)(((unsigned int)img[2 * width * height + m] >> 8) & 0xFF); /* Higher 8-bit */
-					img_uint8[6 * m + 6] = (uint8_t)((unsigned int)img[2 * width * height + m] & 0xFF); /* Lower 8-bit */
+					img_uint8[6 * m + 1] = uint8_t((static_cast<unsigned int>(img[m]) >> 8) & 0xFF); // Higher 8-bit
+					img_uint8[6 * m + 2] = uint8_t(static_cast<unsigned int>(img[m]) & 0xFF); // Lower 8-bit
+					img_uint8[6 * m + 3] = uint8_t((static_cast<unsigned int>(img[width * height + m]) >> 8) & 0xFF); // Higher 8-bit
+					img_uint8[6 * m + 4] = uint8_t(static_cast<unsigned int>(img[width * height + m]) & 0xFF); // Lower 8-bit
+					img_uint8[6 * m + 5] = uint8_t((static_cast<unsigned int>(img[2 * width * height + m]) >> 8) & 0xFF); // Higher 8-bit
+					img_uint8[6 * m + 6] = uint8_t(static_cast<unsigned int>(img[2 * width * height + m]) & 0xFF); // Lower 8-bit
 				}
-				if (fwrite(img_uint8, sizeof(uint8_t), (size_t)2 * 3 * width * height, fp) != (size_t)2 * 3 * width * height) {
+				if (fwrite(img_uint8, sizeof(uint8_t), 2u * 3u * size_t(width) * size_t(height), fp) != 2u * 3u * size_t(width) * size_t(height)) {
 					ErrorFunctionName = "fwrite";
 					ErrorValueName = "img_uint8";
 					goto ErrorFunctionFailed;
@@ -944,16 +968,17 @@ PNM::write(const char *filename)
 					img_uint8 = new uint8_t[3 * width * height];
 				}
 				catch (const std::bad_alloc &bad) {
+					std::cerr << bad.what() << std::endl;
 					ErrorFunctionName = "new";
 					ErrorValueName = "img_uint8";
 					goto ErrorMalloc;
 				}
 				for (m = 0; m < width * height; m++) {
-					img_uint8[3 * m] = (uint8_t)((unsigned int)img[m] & 0xFF);
-					img_uint8[3 * m + 1] = (uint8_t)((unsigned int)img[width * height + m] & 0xFF);
-					img_uint8[3 * m + 2] = (uint8_t)((unsigned int)img[2 * width * height + m] & 0xFF);
+					img_uint8[3 * m] = uint8_t(static_cast<unsigned int>(img[m]) & 0xFF);
+					img_uint8[3 * m + 1] = uint8_t(static_cast<unsigned int>(img[width * height + m]) & 0xFF);
+					img_uint8[3 * m + 2] = uint8_t(static_cast<unsigned int>(img[2 * width * height + m]) & 0xFF);
 				}
-				if (fwrite(img_uint8, sizeof(uint8_t), (size_t)3 * width * height, fp) != (size_t)3 * width * height) {
+				if (fwrite(img_uint8, sizeof(uint8_t), 3u * size_t(width) * size_t(height), fp) != 3u * size_t(width) * size_t(height)) {
 					ErrorFunctionName = "fwrite";
 					ErrorValueName = "img_uint8";
 					goto ErrorFunctionFailed;
@@ -1018,6 +1043,7 @@ PNM::Gray2RGB(const PNM &from)
 		img = new pnm_img[3 * width * height];
 	}
 	catch (const std::bad_alloc &bad) {
+		std::cerr << bad.what() << std::endl;
 		ErrorValueName = "img";
 		goto ErrorMalloc;
 	}
@@ -1030,7 +1056,7 @@ PNM::Gray2RGB(const PNM &from)
 	for (int i = 0; i < width * height; i++) {
 		img[i] = img_from[i];
 		img[width * height + i] = img_from[i];
-		img[2u * width * height + i] = img_from[i];
+		img[2 * width * height + i] = img_from[i];
 	}
 	img_from = nullptr;
 	return PNM_FUNCTION_SUCCESS;
@@ -1047,7 +1073,7 @@ ExitError:
 }
 
 int
-PNM::RGB2Gray(const PNM &from)
+PNM::RGB2Gray(const PNM& from)
 {
 	const char *FunctionName = "PNM::RGB2Gray";
 	std::string ErrorValueName;
@@ -1056,7 +1082,7 @@ PNM::RGB2Gray(const PNM &from)
 	if (img != nullptr) {
 		this->free();
 	}
-	if (from.isNULL() != false) {
+	if (from.isNULL()) {
 		ErrorValueName = "from.img";
 		goto ErrorPointerNull;
 	} else if (from.isRGB() == false) {
@@ -1071,6 +1097,7 @@ PNM::RGB2Gray(const PNM &from)
 		img = new pnm_img[3 * width * height];
 	}
 	catch (const std::bad_alloc &bad) {
+		std::cerr << bad.what() << std::endl;
 		ErrorValueName = "img";
 		goto ErrorMalloc;
 	}
@@ -1081,10 +1108,10 @@ PNM::RGB2Gray(const PNM &from)
 	}
 	img_from = from.Data();
 	for (int i = 0; i < width * height; i++) {
-		img[i] =
-		    PNM_YUV_Y_RED * img_from[i]
-		    + PNM_YUV_Y_GREEN * img_from[width * height + i]
-		    + PNM_YUV_Y_BLUE * img_from[2 * width * height + i];
+		img[i] = int(
+		    PNM_YUV_Y_RED * double(img_from[i])
+		    + PNM_YUV_Y_GREEN * double(img_from[width * height + i])
+		    + PNM_YUV_Y_BLUE * double(img_from[2 * width * height + i]));
 	}
 	img_from = nullptr;
 	return PNM_FUNCTION_SUCCESS;
