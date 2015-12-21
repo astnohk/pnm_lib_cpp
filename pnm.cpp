@@ -908,7 +908,7 @@ PNM::write(const char* filename)
 				}
 				for (m = 0; m < width * height; m++) {
 					img_uint8[2 * m] = uint8_t((static_cast<unsigned int>(img[m]) >> 8) & 0xFF);
-					img_uint8[2 * m + 1] = uint8_t(static_cast<unsigned int>(img[m]) & 0xFF);
+					img_uint8[2 * m + 1] = static_cast<uint8_t>(img[m] & 0xFF);
 				}
 				if (fwrite(img_uint8, sizeof(uint8_t), 2u * size_t(width) * size_t(height), fp) != 2u * size_t(width) * size_t(height)) {
 					ErrorFunctionName = "fwrite";
@@ -927,7 +927,7 @@ PNM::write(const char* filename)
 					goto ErrorMalloc;
 				}
 				for (m = 0; m < width * height; m++) {
-					img_uint8[m] = uint8_t(static_cast<unsigned int>(img[m]) & 0xFF);
+					img_uint8[m] = static_cast<uint8_t>(img[m] & 0xFF);
 				}
 				if (fwrite(img_uint8, sizeof(uint8_t), size_t(width) * size_t(height), fp) != size_t(width) * size_t(height)) {
 					ErrorFunctionName = "fwrite";
@@ -951,11 +951,11 @@ PNM::write(const char* filename)
 				}
 				for (m = 0; m < width * height; m++) {
 					img_uint8[6 * m + 1] = uint8_t((static_cast<unsigned int>(img[m]) >> 8) & 0xFF); // Higher 8-bit
-					img_uint8[6 * m + 2] = uint8_t(static_cast<unsigned int>(img[m]) & 0xFF); // Lower 8-bit
+					img_uint8[6 * m + 2] = static_cast<uint8_t>(img[m] & 0xFF); // Lower 8-bit
 					img_uint8[6 * m + 3] = uint8_t((static_cast<unsigned int>(img[width * height + m]) >> 8) & 0xFF); // Higher 8-bit
-					img_uint8[6 * m + 4] = uint8_t(static_cast<unsigned int>(img[width * height + m]) & 0xFF); // Lower 8-bit
+					img_uint8[6 * m + 4] = static_cast<uint8_t>(img[width * height + m] & 0xFF); // Lower 8-bit
 					img_uint8[6 * m + 5] = uint8_t((static_cast<unsigned int>(img[2 * width * height + m]) >> 8) & 0xFF); // Higher 8-bit
-					img_uint8[6 * m + 6] = uint8_t(static_cast<unsigned int>(img[2 * width * height + m]) & 0xFF); // Lower 8-bit
+					img_uint8[6 * m + 6] = static_cast<uint8_t>(img[2 * width * height + m] & 0xFF); // Lower 8-bit
 				}
 				if (fwrite(img_uint8, sizeof(uint8_t), 2u * 3u * size_t(width) * size_t(height), fp) != 2u * 3u * size_t(width) * size_t(height)) {
 					ErrorFunctionName = "fwrite";
@@ -974,9 +974,9 @@ PNM::write(const char* filename)
 					goto ErrorMalloc;
 				}
 				for (m = 0; m < width * height; m++) {
-					img_uint8[3 * m] = uint8_t(static_cast<unsigned int>(img[m]) & 0xFF);
-					img_uint8[3 * m + 1] = uint8_t(static_cast<unsigned int>(img[width * height + m]) & 0xFF);
-					img_uint8[3 * m + 2] = uint8_t(static_cast<unsigned int>(img[2 * width * height + m]) & 0xFF);
+					img_uint8[3 * m] = static_cast<uint8_t>(img[m] & 0xFF);
+					img_uint8[3 * m + 1] = static_cast<uint8_t>(img[width * height + m] & 0xFF);
+					img_uint8[3 * m + 2] = static_cast<uint8_t>(img[2 * width * height + m] & 0xFF);
 				}
 				if (fwrite(img_uint8, sizeof(uint8_t), 3u * size_t(width) * size_t(height), fp) != 3u * size_t(width) * size_t(height)) {
 					ErrorFunctionName = "fwrite";
