@@ -23,26 +23,26 @@ PNM_DOUBLE::PNM_DOUBLE(const PNM_DOUBLE &pnmd) : PNM_FORMAT(pnmd)
 	}
 	if (desc % 3 == 0) {
 		try {
-			imgd = new pnm_img_double[3 * width * height];
+			imgd = new pnm_img_double[3 * size];
 		}
 		catch (const std::bad_alloc &bad) {
 			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		for (int i = 0; i < 3 * width * height; i++) {
+		for (size_t i = 0; i < 3 * size; i++) {
 			imgd[i] = pnmd.imgd[i];
 		}
 	} else {
 		try {
-			imgd = new pnm_img_double[width * height];
+			imgd = new pnm_img_double[size];
 		}
 		catch (const std::bad_alloc &bad) {
 			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		for (int i = 0; i < width * height; i++) {
+		for (size_t i = 0; i < size; i++) {
 			imgd[i] = pnmd.imgd[i];
 		}
 	}
@@ -71,7 +71,7 @@ PNM_DOUBLE::Data(void) const
 }
 
 pnm_img_double &
-PNM_DOUBLE::operator[](int n) const
+PNM_DOUBLE::operator[](size_t n) const
 {
 	return imgd[n];
 }
@@ -80,7 +80,7 @@ pnm_img_double
 PNM_DOUBLE::Image(int x, int y) const
 {
 	if (0 <= x && x < width && 0 <= y && y < height) {
-		return imgd[width * y + x];
+		return imgd[size_t(width) * size_t(y) + size_t(x)];
 	} else {
 		return 0;
 	}
@@ -93,6 +93,7 @@ PNM_DOUBLE::free(void)
 	width = 0;
 	height = 0;
 	maxint = 0;
+	size = 0;
 	delete[] imgd;
 	imgd = nullptr;
 }
@@ -114,28 +115,29 @@ PNM_DOUBLE::copy(const PNM_DOUBLE &pnmd)
 	width = pnmd.width;
 	height = pnmd.height;
 	maxint = pnmd.maxint;
+	size = pnmd.size;
 	if (desc % 3 == 0) {
 		try {
-			imgd = new pnm_img_double[3 * width * height];
+			imgd = new pnm_img_double[3 * size];
 		}
 		catch (const std::bad_alloc &bad) {
 			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		for (int i = 0; i < 3 * width * height; i++) {
+		for (size_t i = 0; i < 3 * size; i++) {
 			imgd[i] = pnmd.imgd[i];
 		}
 	} else {
 		try {
-			imgd = new pnm_img_double[width * height];
+			imgd = new pnm_img_double[size];
 		}
-		catch (const std::bad_alloc &bad) {
+		catch (const std::bad_alloc& bad) {
 			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		for (int i = 0; i < width * height; i++) {
+		for (size_t i = 0; i < size; i++) {
 			imgd[i] = pnmd.imgd[i];
 		}
 	}
@@ -156,7 +158,6 @@ PNM_DOUBLE::copy(const PNM &pnm_int, double coeff)
 	const char *FunctionName = "PNM_DOUBLE::copy(const PNM &, const double &, const PNM_OFFSET &)";
 	std::string ErrorValueName;
 	pnm_img *img_data = nullptr;
-	int i;
 
 	if (pnm_int.isNULL()) {
 		ErrorValueName = "pnm_int.img";
@@ -173,6 +174,7 @@ PNM_DOUBLE::copy(const PNM &pnm_int, double coeff)
 	width = pnm_int.Width();
 	height = pnm_int.Height();
 	maxint = pnm_int.MaxInt();
+	size = pnm_int.Size();
 	img_data = pnm_int.Data();
 	switch (desc) {
 		case PORTABLE_BITMAP_ASCII:
@@ -187,24 +189,24 @@ PNM_DOUBLE::copy(const PNM &pnm_int, double coeff)
 				ErrorValueName = "imgd";
 				goto ErrorMalloc;
 			}
-			for (i = 0; i < width * height; i++) {
+			for (size_t i = 0; i < size; i++) {
 				imgd[i] = coeff * pnm_img_double(img_data[i]);
 			}
 			break;
 		case PORTABLE_PIXMAP_ASCII:
 		case PORTABLE_PIXMAP_BINARY:
 			try {
-				imgd = new pnm_img_double[3 * width * height];
+				imgd = new pnm_img_double[3 * size];
 			}
-			catch (const std::bad_alloc &bad) {
+			catch (const std::bad_alloc& bad) {
 				std::cerr << bad.what() << std::endl;
 				ErrorValueName = "imgd";
 				goto ErrorMalloc;
 			}
-			for (i = 0; i < width * height; i++) {
+			for (size_t i = 0; i < size; i++) {
 				imgd[i] = coeff * pnm_img_double(img_data[i]);
-				imgd[width * height + i] = coeff * pnm_img_double(img_data[width * height + i]);
-				imgd[2 * width * height + i] = coeff * pnm_img_double(img_data[2 * width * height + i]);
+				imgd[size + i] = coeff * pnm_img_double(img_data[size + i]);
+				imgd[2 * size + i] = coeff * pnm_img_double(img_data[2 * size + i]);
 			}
 			break;
 		default: // ERROR
@@ -249,28 +251,29 @@ PNM_DOUBLE::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data
 	width = Width;
 	height = Height;
 	maxint = MaxInt;
+	size = size_t(Width) * size_t(Height);
 	if (Descriptor % PNM_DESCRIPTOR_PIXMAPS == 0) {
 		try {
-			imgd = new pnm_img_double[3 * width * height];
+			imgd = new pnm_img_double[3 * size];
 		}
-		catch (const std::bad_alloc &bad) {
+		catch (const std::bad_alloc& bad) {
 			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
-		for (int i = 0; i < 3 * width * height; i++) {
+		for (size_t i = 0; i < 3 * size; i++) {
 			imgd[i] = Data[i];
 		}
 	} else {
 		try {
-			imgd = new pnm_img_double[width * height];
+			imgd = new pnm_img_double[size];
 		}
-		catch (const std::bad_alloc &bad) {
+		catch (const std::bad_alloc& bad) {
 			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
-		for (int i = 0; i < width * height; i++) {
+		for (size_t i = 0; i < size; i++) {
 			imgd[i] = Data[i];
 		}
 	}
@@ -296,14 +299,14 @@ PNM_DOUBLE::get_double(void) const
 	double *Image = nullptr;
 
 	try {
-		Image = new double[width * height];
+		Image = new double[size];
 	}
-	catch (const std::bad_alloc &bad) {
+	catch (const std::bad_alloc& bad) {
 		std::cerr << bad.what() << std::endl;
 		fprintf(stderr, "*** %s() error - Cannot allocate memory for (*%s) ***\n", FunctionName, "Image");
 		return nullptr;
 	}
-	for (int n = 0; n < width * height; n++) {
+	for (size_t n = 0; n < size; n++) {
 		Image[n] = imgd[n];
 	}
 	return Image;
@@ -326,6 +329,7 @@ PNM_DOUBLE::RGB2Gray(const PNM_DOUBLE &from)
 	width = from.Width();
 	height = from.Height();
 	maxint = from.MaxInt();
+	size = from.Size();
 	if (from.isRGB() == false) {
 		fprintf(stderr, "*** %s() warning - The input image is binarymap or graymap ***\n", FunctionName);
 		if (from.Desc() <= PNM_DESCRIPTOR_ASCII_MAX) {
@@ -334,15 +338,15 @@ PNM_DOUBLE::RGB2Gray(const PNM_DOUBLE &from)
 			desc = PORTABLE_GRAYMAP_BINARY;
 		}
 		try {
-			imgd = new pnm_img_double[width * height];
+			imgd = new pnm_img_double[size];
 		}
-		catch (const std::bad_alloc &bad) {
+		catch (const std::bad_alloc& bad) {
 			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
 		imgd_from = from.Data();
-		for (int i = 0; i < width * height; i++) {
+		for (size_t i = 0; i < size; i++) {
 			imgd[i] = imgd_from[i];
 		}
 		imgd_from = nullptr;
@@ -353,19 +357,19 @@ PNM_DOUBLE::RGB2Gray(const PNM_DOUBLE &from)
 			desc = PORTABLE_GRAYMAP_BINARY;
 		}
 		try {
-			imgd = new pnm_img_double[width * height];
+			imgd = new pnm_img_double[size];
 		}
-		catch (const std::bad_alloc &bad) {
+		catch (const std::bad_alloc& bad) {
 			std::cerr << bad.what() << std::endl;
 			ErrorValueName = "imgd";
 			goto ErrorMalloc;
 		}
 		imgd_from = from.Data();
-		for (int i = 0; i < width * height; i++) {
+		for (size_t i = 0; i < size; i++) {
 			imgd[i] =
 			    PNM_YUV_Y_RED * imgd_from[i]
-			    + PNM_YUV_Y_GREEN * imgd_from[width * height + i]
-			    + PNM_YUV_Y_BLUE * imgd_from[2 * width * height + i];
+			    + PNM_YUV_Y_GREEN * imgd_from[size + i]
+			    + PNM_YUV_Y_BLUE * imgd_from[2 * size + i];
 		}
 		imgd_from = nullptr;
 	}
@@ -399,10 +403,11 @@ PNM_DOUBLE::Gray2RGB(const PNM_DOUBLE &from)
 	width = from.Width();
 	height = from.Height();
 	maxint = from.MaxInt();
+	size = from.Size();
 	try {
-		imgd = new pnm_img_double[3 * width * height];
+		imgd = new pnm_img_double[3 * size];
 	}
-	catch (const std::bad_alloc &bad) {
+	catch (const std::bad_alloc& bad) {
 		std::cerr << bad.what() << std::endl;
 		ErrorValueName = "imgd";
 		goto ErrorMalloc;
@@ -413,10 +418,10 @@ PNM_DOUBLE::Gray2RGB(const PNM_DOUBLE &from)
 		desc = PORTABLE_PIXMAP_BINARY;
 	}
 	imgd_from = from.Data();
-	for (unsigned int i = 0; i < static_cast<unsigned int>(width * height); i++) {
+	for (size_t i = 0; i < size; i++) {
 		imgd[i] = imgd_from[i];
-		imgd[static_cast<unsigned int>(width * height) + i] = imgd_from[i];
-		imgd[static_cast<unsigned int>(width * height) * 2u + i] = imgd_from[i];
+		imgd[size + i] = imgd_from[i];
+		imgd[2 * size + i] = imgd_from[i];
 	}
 	imgd_from = nullptr;
 	return PNM_FUNCTION_SUCCESS;
@@ -448,32 +453,33 @@ PNM_DOUBLE::RGB2YCbCr(const PNM_DOUBLE &from)
 	width = from.Width();
 	height = from.Height();
 	maxint = from.MaxInt();
+	size = from.Size();
 	if (from.isRGB() == false) {
 		fprintf(stderr, "*** %s() error - The input image is binary or grayscale ***\n", FunctionName);
 		goto ExitError;
 	}
 	try {
-		imgd = new pnm_img_double[3 * width * height];
+		imgd = new pnm_img_double[3 * size];
 	}
-	catch (const std::bad_alloc &bad) {
+	catch (const std::bad_alloc& bad) {
 		std::cerr << bad.what() << std::endl;
 		ErrorValueName = "imgd";
 		goto ErrorMalloc;
 	}
 	imgd_from = from.Data();
-	for (int i = 0; i < width * height; i++) {
+	for (size_t i = 0; i < size; i++) {
 		imgd[i] =
 		    PNM_YUV_Y_RED * imgd_from[i]
-		    + PNM_YUV_Y_GREEN * imgd_from[width * height + i]
-		    + PNM_YUV_Y_BLUE * imgd_from[2 * width * height + i];
-		imgd[width * height + i] =
+		    + PNM_YUV_Y_GREEN * imgd_from[size + i]
+		    + PNM_YUV_Y_BLUE * imgd_from[2 * size + i];
+		imgd[size + i] =
 		    PNM_YUV_Cb_RED * imgd_from[i]
-		    + PNM_YUV_Cb_GREEN * imgd_from[width * height + i]
-		    + PNM_YUV_Cb_BLUE * imgd_from[2 * width * height + i];
-		imgd[2 * width * height + i] =
+		    + PNM_YUV_Cb_GREEN * imgd_from[size + i]
+		    + PNM_YUV_Cb_BLUE * imgd_from[2 * size + i];
+		imgd[2 * size + i] =
 		    PNM_YUV_Cr_RED * imgd_from[i]
-		    + PNM_YUV_Cr_GREEN * imgd_from[width * height + i]
-		    + PNM_YUV_Cr_BLUE * imgd_from[2 * width * height + i];
+		    + PNM_YUV_Cr_GREEN * imgd_from[size + i]
+		    + PNM_YUV_Cr_BLUE * imgd_from[2 * size + i];
 	}
 	imgd_from = nullptr;
 	return PNM_FUNCTION_SUCCESS;
@@ -507,28 +513,29 @@ PNM_DOUBLE::YCbCr2RGB(const PNM_DOUBLE &from)
 	width = from.Width();
 	height = from.Height();
 	maxint = from.MaxInt();
+	size = from.Size();
 	try {
-		imgd = new pnm_img_double[3 * width * height];
+		imgd = new pnm_img_double[3 * size];
 	}
-	catch (const std::bad_alloc &bad) {
+	catch (const std::bad_alloc& bad) {
 		std::cerr << bad.what() << std::endl;
 		ErrorValueName = "imgd";
 		goto ErrorMalloc;
 	}
 	imgd_from = from.Data();
-	for (int i = 0; i < width * height; i++) {
+	for (size_t i = 0; i < size; i++) {
 		imgd[i] =
 		    PNM_RGB_RED_Y * imgd_from[i]
-		    + PNM_RGB_RED_Cb * imgd_from[width * height + i]
-		    + PNM_RGB_RED_Cr * imgd_from[2 * width * height + i];
-		imgd[width * height + i] =
+		    + PNM_RGB_RED_Cb * imgd_from[size + i]
+		    + PNM_RGB_RED_Cr * imgd_from[2 * size + i];
+		imgd[size + i] =
 		    PNM_RGB_GREEN_Y * imgd_from[i]
-		    + PNM_RGB_GREEN_Cb * imgd_from[width * height + i]
-		    + PNM_RGB_GREEN_Cr * imgd_from[2 * width * height + i];
-		imgd[2 * width * height + i] =
+		    + PNM_RGB_GREEN_Cb * imgd_from[size + i]
+		    + PNM_RGB_GREEN_Cr * imgd_from[2 * size + i];
+		imgd[2 * size + i] =
 		    PNM_RGB_BLUE_Y * imgd_from[i]
-		    + PNM_RGB_BLUE_Cb * imgd_from[width * height + i]
-		    + PNM_RGB_BLUE_Cr * imgd_from[2 * width * height + i];
+		    + PNM_RGB_BLUE_Cb * imgd_from[size + i]
+		    + PNM_RGB_BLUE_Cr * imgd_from[2 * size + i];
 	}
 	imgd_from = nullptr;
 	return PNM_FUNCTION_SUCCESS;

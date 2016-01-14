@@ -89,6 +89,7 @@ class PNM_FORMAT
 		int width;
 		int height;
 		int maxint;
+		size_t size;
 	public:
 		PNM_FORMAT(void);
 		PNM_FORMAT(const PNM_FORMAT &pnm);
@@ -98,7 +99,7 @@ class PNM_FORMAT
 		int Width() const;
 		int Height() const;
 		int MaxInt() const;
-		int Size() const;
+		size_t Size() const;
 		// Library
 		int bitdepth(void) const;
 		bool isNULL(void) const;
@@ -118,15 +119,15 @@ class PNM : public PNM_FORMAT
 		PNM(const PNM &pnm);
 		virtual ~PNM(void);
 		pnm_img* Data(void) const;
-		pnm_img& operator[](int n) const;
+		pnm_img& operator[](size_t n) const;
 		pnm_img Image(int x, int y) const;
 		void free(void);
 		int copy(const PNM &pnm);
 		int copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process);
 		int copy(int Descriptor, int Width, int Height, int MaxInt, int *Data);
 		int copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, double coeff);
-		int* get_int(void) const;
-		double* get_double(void) const;
+		int* get_new_int(void) const;
+		double* get_new_double(void) const;
 		int read(const char *filename);
 		int write(const char *filename);
 		int RGB2Gray(const PNM &from);
@@ -143,7 +144,7 @@ class PNM_DOUBLE : public PNM_FORMAT
 		virtual ~PNM_DOUBLE(void);
 		// Library
 		pnm_img_double* Data(void) const;
-		pnm_img_double& operator[](int n) const;
+		pnm_img_double& operator[](size_t n) const;
 		pnm_img_double Image(int x, int y) const;
 		void free(void);
 		int copy(const PNM_DOUBLE &pnmd);
