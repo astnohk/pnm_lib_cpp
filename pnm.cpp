@@ -552,6 +552,7 @@ PNM::read(const char* filename)
 			if (width <= 0 || height <= 0) {
 				goto ErrorImageSize;
 			}
+			size = size_t(width) * size_t(height);
 			maxint = 1;
 			if (fgetc(fp) == EOF) { // Pass through '\n'
 				ErrorFunctionName = "fgetc";
@@ -618,6 +619,7 @@ PNM::read(const char* filename)
 			if (width <= 0 || height <= 0) {
 				goto ErrorImageSize;
 			}
+			size = size_t(width) * size_t(height);
 			if (fgetc(fp) == EOF) { // Pass through '\n'
 				ErrorFunctionName = "fgetc";
 				ErrorValueName = "\\n";
@@ -696,6 +698,7 @@ PNM::read(const char* filename)
 			if (width <= 0 || height <= 0) {
 				goto ErrorImageSize;
 			}
+			size = size_t(width) * size_t(height);
 			if (fgetc(fp) == EOF) { // Pass through '\n'
 				ErrorFunctionName = "fgetc";
 				ErrorValueName = "\\n";
