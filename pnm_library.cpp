@@ -142,7 +142,7 @@ pnm_resize(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const int width_o, con
 			break;
 		default: // Default method is bicubic
 		case PNM_Resize_Bicubic: // (alpha = -0.5)
-			double alpha = -0.5;
+			const double alpha = -0.5;
 			try {
 				pnm_Bicubic(pnm_out, pnm_in, alpha, width_o, height_o);
 			}

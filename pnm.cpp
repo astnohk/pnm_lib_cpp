@@ -468,7 +468,7 @@ ExitError:
 int *
 PNM::get_new_int(void) const
 {
-	const char *FunctionName = "PNM::get_int";
+	const char *FunctionName = "PNM::get_new_int";
 	int *Image = nullptr;
 
 	try {
@@ -488,7 +488,7 @@ PNM::get_new_int(void) const
 double *
 PNM::get_new_double(void) const
 {
-	const char *FunctionName = "PNM::get_double";
+	const char *FunctionName = "PNM::get_new_double";
 	double *Image = nullptr;
 
 	try {
