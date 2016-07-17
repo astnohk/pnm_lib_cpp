@@ -58,6 +58,71 @@ ExitError:
 	return;
 }
 
+PNM_DOUBLE::PNM_DOUBLE(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img_double *Data)
+{
+	const char *FunctionName = "PNM_DOUBLE::PNM_DOUBLE(int, size_t, size_t, int, pnm_img_double *)";
+	std::string ErrorValueName;
+	std::string ErrorDesc;
+
+	if (Descriptor < PNM_DESCRIPTOR_MIN
+	    || Descriptor > PNM_DESCRIPTOR_MAX) {
+		ErrorDesc = "PNM descriptor is out of range [1, 6]";
+		goto ErrorOthers;
+	}
+	desc = Descriptor;
+	width = Width;
+	height = Height;
+	maxint = MaxInt;
+	size = size_t(Width) * size_t(Height);
+	if (Descriptor % PNM_DESCRIPTOR_PIXMAPS == 0) {
+		try {
+			imgd = new pnm_img_double[3 * size];
+		}
+		catch (const std::bad_alloc& bad) {
+			std::cerr << bad.what() << std::endl;
+			ErrorValueName = "imgd";
+			goto ErrorMalloc;
+		}
+		if (Data != nullptr) {
+			for (size_t i = 0; i < 3 * size; i++) {
+				imgd[i] = Data[i];
+			}
+		} else {
+			for (size_t i = 0; i < 3 * size; i++) {
+				imgd[i] = 0.0;
+			}
+		}
+	} else {
+		try {
+			imgd = new pnm_img_double[size];
+		}
+		catch (const std::bad_alloc& bad) {
+			std::cerr << bad.what() << std::endl;
+			ErrorValueName = "img";
+			goto ErrorMalloc;
+		}
+		if (Data != nullptr) {
+			for (size_t i = 0; i < size; i++) {
+				imgd[i] = Data[i];
+			}
+		} else {
+			for (size_t i = 0; i < size; i++) {
+				imgd[i] = 0.0;
+			}
+		}
+	}
+	return;
+// Error
+ErrorMalloc:
+	fprintf(stderr, "*** %s error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	goto ExitError;
+ErrorOthers:
+	fprintf(stderr, "*** %s error - %s ***\n", FunctionName, ErrorValueName.c_str());
+ExitError:
+	this->free();
+	return;
+}
+
 PNM_DOUBLE::~PNM_DOUBLE(void)
 {
 	delete[] imgd;
@@ -71,16 +136,40 @@ PNM_DOUBLE::Data(void) const
 }
 
 pnm_img_double &
-PNM_DOUBLE::operator[](size_t n) const
+PNM_DOUBLE::operator[](const size_t &n) const
 {
 	return imgd[n];
 }
 
-pnm_img_double
-PNM_DOUBLE::Image(int x, int y) const
+pnm_img_double &
+PNM_DOUBLE::at(const size_t &x, const size_t &y) const
 {
-	if (0 <= x && x < width && 0 <= y && y < height) {
-		return imgd[size_t(width) * size_t(y) + size_t(x)];
+	assert(x < width && y < height);
+	return imgd[width * y + x];
+}
+
+pnm_img_double &
+PNM_DOUBLE::at(const size_t &x, const size_t &y, const size_t &c) const
+{
+	assert(x < width && y < height && c < 3);
+	return imgd[width * height * c + width * y + x];
+}
+
+pnm_img_double
+PNM_DOUBLE::Image(const size_t &x, const size_t &y) const
+{
+	if (x < width && y < height) {
+		return imgd[width * y + x];
+	} else {
+		return 0;
+	}
+}
+
+pnm_img_double
+PNM_DOUBLE::Image(const size_t &x, const size_t &y, const size_t &c) const
+{
+	if (x < width && y < height && c < 3) {
+		return imgd[width * height * c + width * y + x];
 	} else {
 		return 0;
 	}
@@ -153,7 +242,7 @@ ExitError:
 }
 
 int
-PNM_DOUBLE::copy(const PNM &pnm_int, double coeff)
+PNM_DOUBLE::copy(const PNM &pnm_int, const double &coeff)
 {
 	const char *FunctionName = "PNM_DOUBLE::copy(const PNM &, const double &, const PNM_OFFSET &)";
 	std::string ErrorValueName;
@@ -226,9 +315,9 @@ ExitError:
 }
 
 int
-PNM_DOUBLE::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data)
+PNM_DOUBLE::copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img_double *Data)
 {
-	const char *FunctionName = "PNM_DOUBLE::copy(int, int, int, int, double *)";
+	const char *FunctionName = "PNM_DOUBLE::copy(int, size_t, size_t, int, pnm_img_double *)";
 	std::string ErrorValueName;
 	std::string ErrorDesc;
 
@@ -239,9 +328,6 @@ PNM_DOUBLE::copy(int Descriptor, int Width, int Height, int MaxInt, double *Data
 	if (Descriptor < PNM_DESCRIPTOR_MIN
 	    || Descriptor > PNM_DESCRIPTOR_MAX) {
 		ErrorDesc = "PNM descriptor is out of range [1, 6]";
-		goto ErrorOthers;
-	} else if (Width < 0 || Height < 0) {
-		ErrorDesc = "The size of image is invalid";
 		goto ErrorOthers;
 	}
 	if (imgd != nullptr) {

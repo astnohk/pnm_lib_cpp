@@ -31,13 +31,13 @@ PNM_FORMAT::Desc(void) const
 	return desc;
 }
 
-int
+size_t
 PNM_FORMAT::Width(void) const
 {
 	return width;
 }
 
-int
+size_t
 PNM_FORMAT::Height(void) const
 {
 	return height;
@@ -154,6 +154,71 @@ ExitError:
 	return;
 }
 
+PNM::PNM(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img *Data)
+{
+	const char *FunctionName = "PNM::PNM(int, size_t, size_t, int, pnm_img *)";
+	std::string ErrorValueName;
+	std::string ErrorDesc;
+
+	if (Descriptor < PNM_DESCRIPTOR_MIN
+	    || Descriptor > PNM_DESCRIPTOR_MAX) {
+		ErrorDesc = "PNM descriptor is out of range [1, 6]";
+		goto ErrorOthers;
+	}
+	desc = Descriptor;
+	width = Width;
+	height = Height;
+	size = static_cast<size_t>(Width) * static_cast<size_t>(Height);
+	maxint = MaxInt;
+	if (Descriptor % PNM_DESCRIPTOR_PIXMAPS == 0) {
+		try {
+			img = new pnm_img[3 * size];
+		}
+		catch (const std::bad_alloc& bad) {
+			std::cerr << bad.what() << std::endl;
+			ErrorValueName = "img";
+			goto ErrorMalloc;
+		}
+		if (Data != nullptr) {
+			for (size_t i = 0; i < 3 * size; i++) {
+				img[i] = Data[i];
+			}
+		} else {
+			for (size_t i = 0; i < 3 * size; i++) {
+				img[i] = 0;
+			}
+		}
+	} else {
+		try {
+			img = new pnm_img[size];
+		}
+		catch (const std::bad_alloc& bad) {
+			std::cerr << bad.what() << std::endl;
+			ErrorValueName = "img";
+			goto ErrorMalloc;
+		}
+		if (Data != nullptr) {
+			for (size_t i = 0; i < size; i++) {
+				img[i] = Data[i];
+			}
+		} else {
+			for (size_t i = 0; i < size; i++) {
+				img[i] = 0;
+			}
+		}
+	}
+	return;
+// Error
+ErrorMalloc:
+	fprintf(stderr, "*** %s error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
+	goto ExitError;
+ErrorOthers:
+	fprintf(stderr, "*** %s error - %s ***\n", FunctionName, ErrorDesc.c_str());
+ExitError:
+	this->free();
+	return;
+}
+
 PNM::~PNM(void)
 {
 	delete[] img;
@@ -167,16 +232,40 @@ PNM::Data(void) const
 }
 
 pnm_img &
-PNM::operator[](size_t n) const
+PNM::operator[](const size_t &n) const
 {
 	return img[n];
 }
 
-pnm_img
-PNM::Image(int x, int y) const
+pnm_img &
+PNM::at(const size_t &x, const size_t &y) const
 {
-	if (0 <= x && x < width && 0 <= y && y < height) {
-		return img[size_t(width) * size_t(y) + size_t(x)];
+	assert(x < width && y < height);
+	return img[width * y + x];
+}
+
+pnm_img &
+PNM::at(const size_t &x, const size_t &y, const size_t &c) const
+{
+	assert(x < width && y < height && c < 3);
+	return img[c * width * height + width * y + x];
+}
+
+pnm_img
+PNM::Image(const size_t &x, const size_t &y) const
+{
+	if (x < width && y < height) {
+		return img[width * y + x];
+	} else {
+		return 0;
+	}
+}
+
+pnm_img
+PNM::Image(const size_t &x, const size_t &y, const size_t &c) const
+{
+	if (x < width && y < height && c < 3) {
+		return img[c * width * height + width * y + x];
 	} else {
 		return 0;
 	}
@@ -250,7 +339,7 @@ ExitError:
 }
 
 int
-PNM::copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process)
+PNM::copy(const PNM_DOUBLE &pnm_double, const double &coeff, const char *process)
 {
 	const char *FunctionName = "PNM::copy(const PNM_DOUBLE &, const double &, const char *, const PNM_OFFSET &)";
 	std::string ErrorValueName;
@@ -332,9 +421,9 @@ ExitError:
 }
 
 int
-PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
+PNM::copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img *Data)
 {
-	const char *FunctionName = "PNM::copy(int, int, int, int, int *)";
+	const char *FunctionName = "PNM::copy(int, size_t, size_t, int, pnm_img *)";
 	std::string ErrorValueName;
 	std::string ErrorDesc;
 
@@ -345,9 +434,6 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, int *Data)
 	if (Descriptor < PNM_DESCRIPTOR_MIN
 	    || Descriptor > PNM_DESCRIPTOR_MAX) {
 		ErrorDesc = "PNM descriptor is out of range [1, 6]";
-		goto ErrorOthers;
-	} else if (Width < 0 || Height < 0) {
-		ErrorDesc = "The size of image is invalid";
 		goto ErrorOthers;
 	}
 	if (img != nullptr) {
@@ -399,9 +485,9 @@ ExitError:
 }
 
 int
-PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double* Data, double coeff)
+PNM::copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img_double *Data, const double &coeff)
 {
-	const char* FunctionName = "PNM::copy(int, int, int, int, double*, double)";
+	const char* FunctionName = "PNM::copy(int, size_t, size_t, int, double*, double)";
 	std::string ErrorValueName;
 	std::string ErrorDesc;
 
@@ -412,9 +498,6 @@ PNM::copy(int Descriptor, int Width, int Height, int MaxInt, double* Data, doubl
 	if (Descriptor < PNM_DESCRIPTOR_MIN
 	    || Descriptor > PNM_DESCRIPTOR_MAX) {
 		ErrorDesc = "PNM descriptor is out of range [1, 6]";
-		goto ErrorOthers;
-	} else if (Width < 0 || Height < 0) {
-		ErrorDesc = "The size of image is invalid";
 		goto ErrorOthers;
 	}
 	if (img != nullptr) {
@@ -786,7 +869,9 @@ PNM::read(const char* filename)
 		return PNM_FUNCTION_ERROR;
 	}
 #ifndef PNM_NO_PRINT
-	printf("  width : %d\n  height %d\n  Bit Depth : %d\n", width, height, this->bitdepth());
+	std::cout << "  width : " << width
+	    << "\n  height " << height
+	    << "\n  Bit Depth : " << this->bitdepth() << std::endl;
 	printf("--- Successfully read the image ---\n\n");
 #endif
 	return PNM_FUNCTION_SUCCESS;
@@ -820,6 +905,7 @@ ErrorReturn:
 int
 PNM::write(const char* filename)
 {
+	std::ostringstream output_str;
 	const char *FunctionName = "PNM::write";
 	std::string ErrorFunctionName;
 	std::string ErrorValueName;
@@ -841,12 +927,16 @@ PNM::write(const char* filename)
 		return PNM_FUNCTION_ERROR;
 	}
 	printf("\n--- Writing to \"%s\" ---\n  Output PNM descriptor : %d\n", fixed_filename.c_str(), desc);
-	printf("  width     = %d\n  height    = %d\n  Intensity = %d\n", width, height, maxint);
+	std::cout << "  width     = " << width
+	    << "\n  height    = " << height
+	    << "\n  Intensity = " << maxint << std::endl;
 
 	size_t width_tmp;
 	switch (desc) {
 		case PORTABLE_BITMAP_ASCII:
-			fprintf(fp, "P1\n%d %d\n", width, height);
+			output_str << "P1\n" << width << " " << height << "\n";
+			//fprintf(fp, "P1\n%u %u\n", width, height);
+			fprintf(fp, output_str.str().c_str());
 			for (size_t m = 0; m < size_t(height); m++) {
 				for (size_t n = 0; n < size_t(width); n++) {
 					fprintf(fp, "%d ", img[size_t(width) * m + n] > 0 ? 0 : 1);
@@ -855,7 +945,9 @@ PNM::write(const char* filename)
 			}
 			break;
 		case PORTABLE_GRAYMAP_ASCII:
-			fprintf(fp, "P2\n%d %d\n%d\n", width, height, maxint);
+			output_str << "P2\n" << width << " " << height << "\n" << maxint << "\n";
+			//fprintf(fp, "P2\n%u %u\n%d\n", width, height, maxint);
+			fprintf(fp, output_str.str().c_str());
 			for (size_t m = 0; m < size_t(height); m++) {
 				for (size_t n = 0; n < size_t(width); n++) {
 					fprintf(fp, "%d ", img[size_t(width) * m + n]);
@@ -864,7 +956,9 @@ PNM::write(const char* filename)
 			}
 			break;
 		case PORTABLE_PIXMAP_ASCII:
-			fprintf(fp, "P3\n%d %d\n", width, height);
+			output_str << "P3\n" << width << " " << height << "\n";
+			//fprintf(fp, "P3\n%lu %lu\n", width, height);
+			fprintf(fp, output_str.str().c_str());
 			for (size_t m = 0; m < size_t(height); m++) {
 				for (size_t n = 0; n < size_t(width); n++) {
 					fprintf(fp, "%d %d %d", img[size_t(width) * m + n], img[size + size_t(width) * m + n], img[2 * size + size_t(width) * m + n]);
@@ -895,7 +989,9 @@ PNM::write(const char* filename)
 					}
 				}
 			}
-			fprintf(fp, "P4\n%d %d\n", width, height);
+			output_str << "P4\n" << width << " " << height << "\n";
+			//fprintf(fp, "P4\n%u %u\n", width, height);
+			fprintf(fp, output_str.str().c_str());
 			if (fwrite(img_uint8, sizeof(uint8_t), width_tmp * size_t(height), fp) != width_tmp * size_t(height)) {
 				ErrorFunctionName = "fwrite";
 				ErrorValueName = "*img_uint8";
@@ -903,13 +999,15 @@ PNM::write(const char* filename)
 			}
 			break;
 		case PORTABLE_GRAYMAP_BINARY: // Portable Graymap Binary
-			fprintf(fp, "P5\n%d %d\n%d\n", width, height, maxint);
+			output_str << "P5\n" << width << " " << height << "\n" << maxint << "\n";
+			//fprintf(fp, "P5\n%u %u\n%d\n", width, height, maxint);
+			fprintf(fp, output_str.str().c_str());
 			if (maxint > 0xFF) {
 				// 16-bit data align in Big Endian order in 8-bit array
 				try {
 					img_uint8 = new uint8_t[2 * size]; // 2 times the size for 16-bit
 				}
-				catch (const std::bad_alloc& bad) {
+				catch (const std::bad_alloc &bad) {
 					std::cerr << bad.what() << std::endl;
 					ErrorFunctionName = "new";
 					ErrorValueName = "img_uint8";
@@ -946,7 +1044,9 @@ PNM::write(const char* filename)
 			}
 			break;
 		case PORTABLE_PIXMAP_BINARY: // Portable Pixmap Binary
-			fprintf(fp, "P6\n%d %d\n%d\n", width, height, maxint);
+			output_str << "P6\n" << width << " " << height << "\n" << maxint << "\n";
+			//fprintf(fp, "P6\n%u %u\n%d\n", width, height, maxint);
+			fprintf(fp, output_str.str().c_str());
 			if (maxint > 0xFF) {
 				// 16-bit data align in Big Endian order in 8-bit array
 				try {

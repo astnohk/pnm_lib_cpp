@@ -7,11 +7,13 @@
 
 
 // C++
+#include <cassert>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 // C
@@ -86,8 +88,8 @@ class PNM_FORMAT
 {
 	protected:
 		int desc;
-		int width;
-		int height;
+		size_t width;
+		size_t height;
 		int maxint;
 		size_t size;
 	public:
@@ -96,8 +98,8 @@ class PNM_FORMAT
 		virtual ~PNM_FORMAT(void);
 		// Access
 		int Desc() const;
-		int Width() const;
-		int Height() const;
+		size_t Width() const;
+		size_t Height() const;
 		int MaxInt() const;
 		size_t Size() const;
 		// Library
@@ -117,15 +119,19 @@ class PNM : public PNM_FORMAT
 	public:
 		PNM(void);
 		PNM(const PNM &pnm);
+		PNM(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img *Data = nullptr);
 		virtual ~PNM(void);
 		pnm_img* Data(void) const;
-		pnm_img& operator[](size_t n) const;
-		pnm_img Image(int x, int y) const;
+		pnm_img& operator[](const size_t &n) const;
+		pnm_img& at(const size_t &x, const size_t &y) const;
+		pnm_img& at(const size_t &x, const size_t &y, const size_t &c) const;
+		pnm_img Image(const size_t &x, const size_t &y) const;
+		pnm_img Image(const size_t &x, const size_t &y, const size_t &c) const;
 		void free(void);
 		int copy(const PNM &pnm);
-		int copy(const PNM_DOUBLE &pnm_double, double coeff, const char *process);
-		int copy(int Descriptor, int Width, int Height, int MaxInt, int *Data);
-		int copy(int Descriptor, int Width, int Height, int MaxInt, double *Data, double coeff);
+		int copy(const PNM_DOUBLE &pnm_double, const double &coeff, const char *process);
+		int copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img *Data);
+		int copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const double *Data, const double &coeff);
 		int* get_new_int(void) const;
 		double* get_new_double(void) const;
 		int read(const char *filename);
@@ -141,15 +147,19 @@ class PNM_DOUBLE : public PNM_FORMAT
 	public:
 		PNM_DOUBLE(void);
 		PNM_DOUBLE(const PNM_DOUBLE &pnmd);
+		PNM_DOUBLE(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img_double *Data = nullptr);
 		virtual ~PNM_DOUBLE(void);
 		// Library
 		pnm_img_double* Data(void) const;
-		pnm_img_double& operator[](size_t n) const;
-		pnm_img_double Image(int x, int y) const;
+		pnm_img_double& operator[](const size_t &n) const;
+		pnm_img_double& at(const size_t &x, const size_t &y) const;
+		pnm_img_double& at(const size_t &x, const size_t &y, const size_t &c) const;
+		pnm_img_double Image(const size_t &x, const size_t &y) const;
+		pnm_img_double Image(const size_t &x, const size_t &y, const size_t &c) const;
 		void free(void);
 		int copy(const PNM_DOUBLE &pnmd);
-		int copy(const PNM &pnm_int, double coeff);
-		int copy(int Descriptor, int Width, int Height, int MaxInt, double *Data);
+		int copy(const PNM &pnm_int, const double &coeff);
+		int copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img_double *Data);
 		double* get_double(void) const;
 		int RGB2Gray(const PNM_DOUBLE &from);
 		int Gray2RGB(const PNM_DOUBLE &from);
@@ -160,7 +170,7 @@ class PNM_DOUBLE : public PNM_FORMAT
 
 
 // Library for Read and Write
-extern bool fcommentf(FILE *, int *);
+template<class T> extern bool fcommentf(FILE *, T *);
 extern std::string pnm_FixExtension(const char *filename, int desc);
 
 // Resize
@@ -170,5 +180,59 @@ extern void pnm_Bicubic(PNM_DOUBLE* pnm_out, const PNM_DOUBLE& pnm_in, const dou
 extern double pnm_Cubic(const double x, const double a);
 
 // End of definition of pnm_lib_cpp
+
+
+template <class T>
+bool
+fcommentf(FILE *fp, T *ret)
+{
+	char ctmp[NUM_READ_STRING + 1];
+	char c;
+	int c_int;
+	int flag;
+	int read;
+
+	ctmp[NUM_READ_STRING] = '\0'; // To prevent Buffer Overrun
+	flag = 1;
+	while (flag != 0) {
+		flag = 0;
+		long ftold = ftell(fp);
+		if (fscanf(fp, STRING_NUM_READ_STRING, ctmp) != 1) {
+			fprintf(stderr, "*** fcommentf error - Failed to read by fscanf() ***\n");
+			return false;
+		}
+		if (ctmp[0] == '#') {
+			if (fseek(fp, ftold, SEEK_SET) != 0) {
+				fprintf(stderr, "*** fcommentf error - Failed to do fseek() ***\n");
+				return false;
+			}
+			printf("\"");
+			while ((flag < 2) && (feof(fp) == 0)) {
+				if ((c_int = fgetc(fp)) == EOF) {
+					fprintf(stderr, "*** pnmread error - fgetc returns EOF ***\n");
+					return false;
+				}
+				c = char(c_int);
+				if (c != '\n') {
+					printf("%c", c);
+				}
+				if ((flag == 0) && (c == '#')) {
+					flag = 1;
+				} else if ((flag != 0) && (c == '\n')) {
+					flag = 2;
+				}
+			}
+			printf("\"\n");
+		}
+	}
+	ctmp[NUM_READ_STRING] = '\0'; // To prevent Buffer Overrun
+	if (sscanf(ctmp, "%7d", &read) != 1) {
+		fprintf(stderr, "*** fcommentf error - Failed to read from ctmp by sscanf() ***\n");
+		return false;
+	}
+	*ret = read;
+	return true;
+}
+
 #endif
 

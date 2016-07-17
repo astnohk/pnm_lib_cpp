@@ -3,57 +3,6 @@
 
 
 // Library
-bool
-fcommentf(FILE *fp, int *ret)
-{
-	char ctmp[NUM_READ_STRING + 1];
-	char c;
-	int c_int;
-	int flag;
-	int read;
-
-	ctmp[NUM_READ_STRING] = '\0'; /* To prevent Buffer Overflow */
-	flag = 1;
-	while (flag != 0) {
-		flag = 0;
-		long ftold = ftell(fp);
-		if (fscanf(fp, STRING_NUM_READ_STRING, ctmp) != 1) {
-			fprintf(stderr, "*** fcommentf error - Failed to read by fscanf() ***\n");
-			return false;
-		}
-		if (ctmp[0] == '#') {
-			if (fseek(fp, ftold, SEEK_SET) != 0) {
-				fprintf(stderr, "*** fcommentf error - Failed to do fseek() ***\n");
-				return false;
-			}
-			printf("\"");
-			while ((flag < 2) && (feof(fp) == 0)) {
-				if ((c_int = fgetc(fp)) == EOF) {
-					fprintf(stderr, "*** pnmread error - fgetc returns EOF ***\n");
-					return false;
-				}
-				c = char(c_int);
-				if (c != '\n') {
-					printf("%c", c);
-				}
-				if ((flag == 0) && (c == '#')) {
-					flag = 1;
-				} else if ((flag != 0) && (c == '\n')) {
-					flag = 2;
-				}
-			}
-			printf("\"\n");
-		}
-	}
-	ctmp[NUM_READ_STRING] = '\0'; /* To prevent Buffer Overflow */
-	if (sscanf(ctmp, "%7d", &read) != 1) {
-		fprintf(stderr, "*** fcommentf error - Failed to read from ctmp by sscanf() ***\n");
-		return false;
-	}
-	*ret = read;
-	return true;
-}
-
 std::string
 pnm_FixExtension(const char *filename, int desc)
 {
