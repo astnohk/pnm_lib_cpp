@@ -961,7 +961,7 @@ PNM::write(const char* filename)
 			fprintf(fp, output_str.str().c_str());
 			for (size_t m = 0; m < size_t(height); m++) {
 				for (size_t n = 0; n < size_t(width); n++) {
-					fprintf(fp, "%d %d %d", img[size_t(width) * m + n], img[size + size_t(width) * m + n], img[2 * size + size_t(width) * m + n]);
+					fprintf(fp, "%d %d %d ", img[size_t(width) * m + n], img[size + size_t(width) * m + n], img[2 * size + size_t(width) * m + n]);
 				}
 				fprintf(fp,"\n");
 			}
