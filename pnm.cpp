@@ -179,12 +179,10 @@ PNM::PNM(const int Descriptor, const size_t &Width, const size_t &Height, const 
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
-		if (Data != nullptr) {
-			for (size_t i = 0; i < 3 * size; i++) {
+		for (size_t i = 0; i < 3 * size; i++) {
+			if (Data != nullptr) {
 				img[i] = Data[i];
-			}
-		} else {
-			for (size_t i = 0; i < 3 * size; i++) {
+			} else {
 				img[i] = 0;
 			}
 		}
@@ -197,12 +195,10 @@ PNM::PNM(const int Descriptor, const size_t &Width, const size_t &Height, const 
 			ErrorValueName = "img";
 			goto ErrorMalloc;
 		}
-		if (Data != nullptr) {
-			for (size_t i = 0; i < size; i++) {
+		for (size_t i = 0; i < size; i++) {
+			if (Data != nullptr) {
 				img[i] = Data[i];
-			}
-		} else {
-			for (size_t i = 0; i < size; i++) {
+			} else {
 				img[i] = 0;
 			}
 		}
@@ -427,10 +423,6 @@ PNM::copy(const int Descriptor, const size_t &Width, const size_t &Height, const
 	std::string ErrorValueName;
 	std::string ErrorDesc;
 
-	if (Data == nullptr) {
-		ErrorValueName = "Data";
-		goto ErrorPointerNull;
-	}
 	if (Descriptor < PNM_DESCRIPTOR_MIN
 	    || Descriptor > PNM_DESCRIPTOR_MAX) {
 		ErrorDesc = "PNM descriptor is out of range [1, 6]";
@@ -454,7 +446,11 @@ PNM::copy(const int Descriptor, const size_t &Width, const size_t &Height, const
 			goto ErrorMalloc;
 		}
 		for (size_t i = 0; i < 3 * size; i++) {
-			img[i] = Data[i];
+			if (Data != nullptr) {
+				img[i] = Data[i];
+			} else {
+				img[i] = 0;
+			}
 		}
 	} else {
 		try {
@@ -466,7 +462,11 @@ PNM::copy(const int Descriptor, const size_t &Width, const size_t &Height, const
 			goto ErrorMalloc;
 		}
 		for (size_t i = 0; i < size; i++) {
-			img[i] = Data[i];
+			if (Data != nullptr) {
+				img[i] = Data[i];
+			} else {
+				img[i] = 0;
+			}
 		}
 	}
 	return PNM_FUNCTION_SUCCESS;

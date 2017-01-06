@@ -130,7 +130,7 @@ class PNM : public PNM_FORMAT
 		void free(void);
 		int copy(const PNM &pnm);
 		int copy(const PNM_DOUBLE &pnm_double, const double &coeff, const char *process);
-		int copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img *Data);
+		int copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const pnm_img *Data = nullptr);
 		int copy(const int Descriptor, const size_t &Width, const size_t &Height, const int MaxInt, const double *Data, const double &coeff);
 		int* get_new_int(void) const;
 		double* get_new_double(void) const;
