@@ -342,7 +342,7 @@ PNM::copy(const PNM_DOUBLE &pnm_double, const double &coeff, const char *process
 	pnm_img_double *imgd_data = nullptr;
 	double FRC = 0.5;
 
-	if (pnm_double.isNULL() != false) {
+	if (pnm_double.isNULL()) {
 		ErrorValueName = "pnm_double.imgd";
 		goto ErrorPointerNull;
 	}
@@ -473,9 +473,6 @@ PNM::copy(const int Descriptor, const size_t &Width, const size_t &Height, const
 // Error
 ErrorMalloc:
 	fprintf(stderr, "*** %s error - Cannot allocate memory for (*%s) ***\n", FunctionName, ErrorValueName.c_str());
-	goto ExitError;
-ErrorPointerNull:
-	fprintf(stderr, "*** %s error - The pointer (*%s) is NULL ***\n", FunctionName, ErrorValueName.c_str());
 	goto ExitError;
 ErrorOthers:
 	fprintf(stderr, "*** %s error - %s ***\n", FunctionName, ErrorDesc.c_str());
@@ -1134,13 +1131,18 @@ PNM::Gray2RGB(const PNM &from)
 	std::string ErrorValueName;
 	pnm_img *img_from = nullptr;
 
+	if (this == &from) {
+		ErrorValueName = "from.img";
+		fprintf(stderr, "*** %s() error - Self conversion ***\n", FunctionName);
+		goto ExitError;
+	}
 	if (img != nullptr) {
 		this->free();
 	}
-	if (from.isNULL() != false) {
+	if (from.isNULL()) {
 		ErrorValueName = "from.img";
 		goto ErrorPointerNull;
-	} else if (from.isRGB() != false) {
+	} else if (from.isRGB()) {
 		fprintf(stderr, "*** %s() error - PNM Descriptor of is incorrect ***\n", FunctionName);
 		goto ExitError;
 	}
