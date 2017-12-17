@@ -953,7 +953,7 @@ PNM::write(const char* filename)
 			}
 			break;
 		case PORTABLE_PIXMAP_ASCII:
-			output_str << "P3\n" << width << " " << height << "\n";
+			output_str << "P3\n" << width << " " << height << "\n" << maxint << "\n";
 			//fprintf(fp, "P3\n%lu %lu\n", width, height);
 			fprintf(fp, output_str.str().c_str());
 			for (size_t m = 0; m < size_t(height); m++) {
